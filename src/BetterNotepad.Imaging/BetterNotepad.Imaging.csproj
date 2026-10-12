@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Image viewer + simple editor (WPF / WIC only, no extra packages). -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Imaging</RootNamespace>
+    <AssemblyName>BetterNotepad.Imaging</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BetterNotepad.Ui.Sample" />
+  </ItemGroup>
+
+</Project>

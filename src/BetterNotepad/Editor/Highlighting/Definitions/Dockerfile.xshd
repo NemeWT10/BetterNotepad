@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Dockerfile. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Dockerfile" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Type" exampleText="int string"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Preprocessor" exampleText="#include"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Rule color="Preprocessor">^\#\s*(?i:syntax|escape|check)\s*=.*</Rule>
+    <Span color="Comment" ruleSet="Cmt" begin="^\s*\#(?!\s*(?i:syntax|escape|check)\s*=)"/>
+    <Span multiline="true" ruleSet="Shell/">
+      <Begin color="Keyword">^\s*(?i:RUN|CMD|ENTRYPOINT|SHELL)\b</Begin>
+      <End>(?&lt;!\\)$</End>
+    </Span>
+    <Span multiline="true" ruleSet="DkFrom">
+      <Begin color="Keyword">^\s*(?i:FROM)\b</Begin>
+      <End>(?&lt;!\\)$</End>
+    </Span>
+    <Span multiline="true" ruleSet="DkArgs">
+      <Begin color="Keyword">^\s*(?i:LABEL|MAINTAINER|EXPOSE|ENV|ADD|COPY|VOLUME|USER|WORKDIR|ARG|ONBUILD|STOPSIGNAL|HEALTHCHECK)\b</Begin>
+      <End>(?&lt;!\\)$</End>
+    </Span>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="DkDq">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+    <Rule color="Variable">\$(?:\{[^}\n]*\}|[A-Za-z_]\w*)</Rule>
+  </RuleSet>
+
+  <RuleSet name="DkFrom">
+    <Span color="Comment" ruleSet="Cmt" begin="^\s*\#"/>
+    <Rule color="Attribute">(?&lt;=\s)--[A-Za-z][\w-]*</Rule>
+    <Span color="String" ruleSet="DkDq" begin="&quot;" end="&quot;"/>
+    <Span color="String" begin="'" end="'"/>
+    <Rule color="Variable">\$(?:\{[^}\n]*\}|[A-Za-z_]\w*)</Rule>
+    <Rule color="Keyword">(?i:\bAS\b)</Rule>
+    <Rule color="Type">[A-Za-z0-9_./:@$-]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="DkArgs">
+    <Span color="Comment" ruleSet="Cmt" begin="^\s*\#"/>
+    <Rule color="Attribute">(?&lt;=\s)--[A-Za-z][\w-]*</Rule>
+    <Span color="String" ruleSet="DkDq" begin="&quot;" end="&quot;"/>
+    <Span color="String" begin="'" end="'"/>
+    <Rule color="Variable">\$(?:\{[^}\n]*\}|[A-Za-z_]\w*)</Rule>
+    <Rule color="Variable">[A-Za-z_][\w.-]*(?==(?!=))</Rule>
+    <Rule color="Number">(?&lt;=\s)\d+(?:-\d+)?(?:/(?:tcp|udp))?\b</Rule>
+    <Rule color="Punctuation">[\[\],]</Rule>
+    <Rule color="Operator">=</Rule>
+  </RuleSet>
+</SyntaxDefinition>

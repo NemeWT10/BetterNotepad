@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- HTML / SVG live preview on a lazily created, shared WebView2 (freed when the last preview goes away). -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Html</RootNamespace>
+    <AssemblyName>BetterNotepad.Html</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BetterNotepad.Ui.Sample" />
+  </ItemGroup>
+
+</Project>

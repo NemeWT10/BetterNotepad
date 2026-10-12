@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Python. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Python" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Type" exampleText="int string"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="Property" exampleText="obj.Name"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Rule color="Comment">^\#!.*</Rule>
+    <Span color="Comment" ruleSet="Cmt" begin="\#"/>
+    <Span color="String" multiline="true" ruleSet="PyFRaw" begin="(?&lt;!\w)(?i:fr|rf)&quot;&quot;&quot;" end="&quot;&quot;&quot;"/>
+    <Span color="String" multiline="true" ruleSet="PyF" begin="(?&lt;!\w)(?i:f)&quot;&quot;&quot;" end="&quot;&quot;&quot;"/>
+    <Span color="String" multiline="true" ruleSet="PyRaw" begin="(?&lt;!\w)(?i:br|rb|r)&quot;&quot;&quot;" end="&quot;&quot;&quot;"/>
+    <Span color="String" multiline="true" ruleSet="PyEsc" begin="(?&lt;!\w)(?i:b|u)?&quot;&quot;&quot;" end="&quot;&quot;&quot;"/>
+    <Span color="String" multiline="true" ruleSet="PyFRaw" begin="(?&lt;!\w)(?i:fr|rf)'''" end="'''"/>
+    <Span color="String" multiline="true" ruleSet="PyF" begin="(?&lt;!\w)(?i:f)'''" end="'''"/>
+    <Span color="String" multiline="true" ruleSet="PyRaw" begin="(?&lt;!\w)(?i:br|rb|r)'''" end="'''"/>
+    <Span color="String" multiline="true" ruleSet="PyEsc" begin="(?&lt;!\w)(?i:b|u)?'''" end="'''"/>
+    <Span color="String" ruleSet="PyFRaw" begin="(?&lt;!\w)(?i:fr|rf)&quot;(?!&quot;&quot;)" end="&quot;"/>
+    <Span color="String" ruleSet="PyF" begin="(?&lt;!\w)(?i:f)&quot;(?!&quot;&quot;)" end="&quot;"/>
+    <Span color="String" ruleSet="PyRaw" begin="(?&lt;!\w)(?i:br|rb|r)&quot;(?!&quot;&quot;)" end="&quot;"/>
+    <Span color="String" ruleSet="PyEsc" begin="(?&lt;!\w)(?i:b|u)?&quot;(?!&quot;&quot;)" end="&quot;"/>
+    <Span color="String" ruleSet="PyFRaw" begin="(?&lt;!\w)(?i:fr|rf)'(?!'')" end="'"/>
+    <Span color="String" ruleSet="PyF" begin="(?&lt;!\w)(?i:f)'(?!'')" end="'"/>
+    <Span color="String" ruleSet="PyRaw" begin="(?&lt;!\w)(?i:br|rb|r)'(?!'')" end="'"/>
+    <Span color="String" ruleSet="PyEsc" begin="(?&lt;!\w)(?i:b|u)?'(?!'')" end="'"/>
+    <Rule color="Attribute">(?&lt;=^\s*)@[A-Za-z_][\w.]*</Rule>
+    <Rule color="Control">(?&lt;![\w.])(?:continue|finally|assert|except|return|break|raise|while|yield|elif|else|pass|with|for|try|if)\b</Rule>
+    <Rule color="Keyword">(?&lt;![\w.])(?:nonlocal|global|import|lambda|async|await|class|from|and|def|del|not|as|in|is|or)\b</Rule>
+    <Rule color="Control">(?&lt;=^\s*)(?:match|case)\b(?=\s+(?![=\s]))</Rule>
+    <Rule color="Constant">(?&lt;![\w.])(?:NotImplemented|__debug__|Ellipsis|False|None|True)\b</Rule>
+    <Rule color="Constant">(?&lt;![\w.])\.\.\.(?!\.)</Rule>
+    <Rule color="Type">(?&lt;![\w.])(?:
+      staticmethod|classmethod|memoryview|bytearray|frozenset|property|complex|object|bytes|float|range|
+      slice|tuple|bool|dict|list|type|int|set|str
+    )\b</Rule>
+    <Rule color="Variable">\b(?:self|cls)\b</Rule>
+    <Rule color="Type">(?&lt;=\bclass\s+)[A-Za-z_]\w*</Rule>
+    <Rule color="Variable">(?&lt;=[(,]\s*)[A-Za-z_]\w*(?=\s*=(?!=))</Rule>
+    <Rule color="Number">\b0[xX][0-9a-fA-F_]+[lL]?\b</Rule>
+    <Rule color="Number">\b0[bB][01_]+[lL]?\b</Rule>
+    <Rule color="Number">\b0[oO][0-7_]+[lL]?\b</Rule>
+    <Rule color="Number">(?&lt;![\w.])(?:\d[\d_]*(?:\.(?!\.)[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?[jJlL]?\b</Rule>
+    <Rule color="Type">\b[A-Z]\w*(?=\s*\()</Rule>
+    <Rule color="Function">\b[A-Za-z_]\w*(?=\s*\()</Rule>
+    <Rule color="Constant">\b__[A-Za-z]\w*__\b</Rule>
+    <Rule color="Constant">\b[A-Z][A-Z0-9_]{2,}\b</Rule>
+    <Rule color="Property">(?&lt;=\.)[A-Za-z_]\w*\b</Rule>
+    <Rule color="Type">\b[A-Z]\w*\b</Rule>
+    <Rule color="Operator">-&gt;|:=|[-+*/%=&lt;&gt;!&amp;|^~@]+</Rule>
+    <Rule color="Punctuation">[{}()\[\];,.:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="PyEsc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|N\{[^}\n]*\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="PyRaw">
+    <Span begin="\\" end="."/>
+  </RuleSet>
+
+  <RuleSet name="PyF">
+    <Span color="Escape" begin="\{\{|\}\}" end="(?=.)"/>
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|N\{[^}\n]*\}|[0-7]{1,3}|.)" end="(?=.)"/>
+    <Span color="Variable">
+      <Begin color="Punctuation">\{(?!\{)</Begin>
+      <End color="Punctuation">\}</End>
+      <RuleSet>
+        <Span color="String" ruleSet="PyEsc" begin="&quot;" end="&quot;"/>
+        <Span color="String" ruleSet="PyEsc" begin="'" end="'"/>
+        <Rule color="Constant">(?&lt;![\w.])(?:NotImplemented|__debug__|Ellipsis|False|None|True)\b</Rule>
+        <Rule color="Keyword">(?&lt;![\w.])(?:lambda|await|else|and|for|not|if|in|is|or)\b</Rule>
+        <Rule color="Number">\b0[xX][0-9a-fA-F_]+[lL]?\b</Rule>
+        <Rule color="Number">\b0[bB][01_]+[lL]?\b</Rule>
+        <Rule color="Number">\b0[oO][0-7_]+[lL]?\b</Rule>
+        <Rule color="Number">(?&lt;![\w.])(?:\d[\d_]*(?:\.(?!\.)[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?[jJlL]?\b</Rule>
+        <Rule color="Function">\b[A-Za-z_]\w*(?=\s*\()</Rule>
+        <Rule color="Property">(?&lt;=\.)[A-Za-z_]\w*\b</Rule>
+        <Rule color="Type">\b[A-Z]\w*\b</Rule>
+        <Rule color="Operator">[-+*%=&lt;&gt;!&amp;|^~?]+|/(?![/*])=?</Rule>
+        <Rule color="Punctuation">[()\[\],.:]+</Rule>
+      </RuleSet>
+    </Span>
+  </RuleSet>
+
+  <RuleSet name="PyFRaw">
+    <Span color="Escape" begin="\{\{|\}\}" end="(?=.)"/>
+    <Span begin="\\" end="."/>
+    <Span color="Variable">
+      <Begin color="Punctuation">\{(?!\{)</Begin>
+      <End color="Punctuation">\}</End>
+      <RuleSet>
+        <Span color="String" ruleSet="PyEsc" begin="&quot;" end="&quot;"/>
+        <Span color="String" ruleSet="PyEsc" begin="'" end="'"/>
+        <Rule color="Constant">(?&lt;![\w.])(?:NotImplemented|__debug__|Ellipsis|False|None|True)\b</Rule>
+        <Rule color="Keyword">(?&lt;![\w.])(?:lambda|await|else|and|for|not|if|in|is|or)\b</Rule>
+        <Rule color="Number">\b0[xX][0-9a-fA-F_]+[lL]?\b</Rule>
+        <Rule color="Number">\b0[bB][01_]+[lL]?\b</Rule>
+        <Rule color="Number">\b0[oO][0-7_]+[lL]?\b</Rule>
+        <Rule color="Number">(?&lt;![\w.])(?:\d[\d_]*(?:\.(?!\.)[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?[jJlL]?\b</Rule>
+        <Rule color="Function">\b[A-Za-z_]\w*(?=\s*\()</Rule>
+        <Rule color="Property">(?&lt;=\.)[A-Za-z_]\w*\b</Rule>
+        <Rule color="Type">\b[A-Z]\w*\b</Rule>
+        <Rule color="Operator">[-+*%=&lt;&gt;!&amp;|^~?]+|/(?![/*])=?</Rule>
+        <Rule color="Punctuation">[()\[\],.:]+</Rule>
+      </RuleSet>
+    </Span>
+  </RuleSet>
+</SyntaxDefinition>

@@ -1,0 +1,304 @@
+##### Yaml
+##E %YAML => Preprocessor
+##E --- => Punctuation
+##E # comment => Comment
+##E name => Key
+##E My App => String
+##E version => Key
+##E "1.2.3" => String
+##E 42 => Number
+##E 3.14 => Number
+##E true => Constant
+##E ~ => Constant
+##E &base => Variable
+##E key ~1 => Key
+##E '' => Escape
+##E list => Key
+##E one => String
+##E two => Key
+##E "quoted" => String
+##E << => Key
+##E *base => Variable
+##E url => Key
+##E http://example.com/path => String
+##E # trailing => Comment
+##E | => Operator
+##E "quoted key" => Key
+##E ${VAR} => Variable
+%YAML 1.2
+---
+# comment
+name: My App
+version: "1.2.3"
+count: 42
+ratio: 3.14
+enabled: true
+nothing: ~
+anchors: &base
+  key: 'it''s'
+  list:
+    - one
+    - two: 2
+    - "quoted"
+merged:
+  <<: *base
+  url: http://example.com/path#frag   # trailing
+text: |
+  literal block
+"quoted key": value
+tmpl: "{{ .Values.x }} ${VAR}"
+inline: {a: 1, b: [x, y]}
+
+##### Toml
+##E # config => Comment
+##E title => Key
+##E TOML => String
+##E \u00e9 => Escape
+##E [owner] => Section
+##E name => Key
+##E 'Tom' => String
+##E 1979-05-27T07:32:00-08:00 => Number
+##E [[servers]] => Section
+##E ip => Key
+##E "10.0.0.1" => String
+##E 8001 => Number
+##E true => Constant
+##E 3.14_15 => Number
+##E 0xDEAD_BEEF => Number
+##E line one => String
+##E a.b."c d" => Key
+# config
+title = "TOML \u00e9"
+[owner]
+name = 'Tom'
+dob = 1979-05-27T07:32:00-08:00
+[[servers]]
+ip = "10.0.0.1"
+ports = [ 8001, 8002 ]
+enabled = true
+pi = 3.14_15
+hex = 0xDEAD_BEEF
+inline = { x = 1, y = 2 }
+multi = """
+line one
+"""
+a.b."c d" = 1
+
+##### Ini
+##E ; comment => Comment
+##E # hash comment => Comment
+##E [section one] => Section
+##E key => Key
+##E value => String
+##E C:\Program Files\App => String
+##E trailing => Comment
+##E name => Key
+##E Alice => String
+##E 42 => Number
+##E true => Constant
+##E "a b" => String
+##E ${HOME} => Variable
+##E "Reg Key" => Key
+##E dword:0000001a => Number
+; comment
+# hash comment
+[section one]
+key = value
+path = C:\Program Files\App   ; trailing
+name: Alice
+number = 42
+flag = true
+empty =
+quoted = "a b"
+url=${HOME}/bin
+"Reg Key"=dword:0000001a
+
+##### Sql
+##E -- comment => Comment
+##E block => Comment
+##E SELECT => Keyword
+##E DISTINCT => Keyword
+##E COUNT => Function
+##E AS => Keyword
+##E '' => Escape
+##E "Quoted Col" => Variable
+##E [bracket col] => Variable
+##E @var => Variable
+##E :param => Variable
+##E FROM => Keyword
+##E LEFT => Keyword
+##E JOIN => Keyword
+##E ON => Keyword
+##E >= => Operator
+##E 100.50 => Number
+##E LIKE => Keyword
+##E 'A%' => String
+##E NOT => Keyword
+##E NULL ~1 => Constant
+##E LIMIT => Keyword
+##E INSERT => Keyword
+##E  INT  => Type
+##E PRIMARY => Keyword
+##E AUTO_INCREMENT => Keyword
+##E DATETIME => Type
+##E DEFAULT => Keyword
+##E NUMERIC => Type
+##E CASE => Control
+##E WHEN => Control
+##E THEN => Control
+##E ELSE => Control
+##E END => Control
+-- comment
+/* block */
+SELECT DISTINCT u.id, COUNT(*) AS total, 'it''s' AS s, "Quoted Col", [bracket col], @var, :param
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id AND o.total >= 100.50
+WHERE u.name LIKE 'A%' AND u.deleted IS NOT NULL
+GROUP BY u.id HAVING COUNT(*) > 1 ORDER BY total DESC LIMIT 10;
+INSERT INTO users (id, name) VALUES (1, 'x'), (2, NULL);
+CREATE TABLE t (id INT PRIMARY KEY AUTO_INCREMENT, d DATETIME DEFAULT CURRENT_TIMESTAMP, price NUMERIC(10, 2));
+CASE WHEN a THEN 1 ELSE 0 END;
+
+##### Csv
+##E , => Punctuation
+##E Smith => String
+##E "" ~1 => Escape
+##E 12.5 => Number
+##E true => Constant
+##E -3 => Number
+id,name,score,note
+1,"Smith, ""Bob""",12.5,true
+2,Alice,-3,
+3;"x|y";"multi
+line";4
+
+##### Log
+##E 2026-10-12 14:03:22,123 => LogTimestamp
+##E INFO => LogInfo
+##E 8080 ~1 => Number
+##E http://localhost:8080/health => Link
+##E 2026-10-12T14:03:23.456Z => LogTimestamp
+##E [WARN] => LogWarning
+##E id => Property
+##E 5f2c1a3e-1b2c-4d5e-8f9a-0123456789ab => Constant
+##E Oct 12 14:03:24 => LogTimestamp
+##E ERROR => LogError
+##E "Connection refused" => String
+##E 'bob' => String
+##E 12/Oct/2026:14:03:25 +0200 => LogTimestamp
+##E 14:03:26.001 => LogTimestamp
+##E DEBUG => LogDebug
+##E 0.93 => Number
+##E 10.0.0.1:443 => Number
+##E [TRACE] => LogTrace
+##E FATAL => LogError
+##E exception => LogError
+##E failed => LogError
+2026-10-12 14:03:22,123 INFO  [main] Server started on port 8080 (http://localhost:8080/health)
+2026-10-12T14:03:23.456Z [WARN] Slow request id=5f2c1a3e-1b2c-4d5e-8f9a-0123456789ab took 1532ms
+Oct 12 14:03:24 host app[123]: ERROR "Connection refused" for user 'bob'
+12/Oct/2026:14:03:25 +0200 GET /index.html 200
+14:03:26.001 DEBUG cache hit ratio=0.93 ip=10.0.0.1:443
+[TRACE] verbose details
+FATAL: unhandled exception: failed to open file
+
+##### Markdown
+##E # Title with => Heading
+##E code ~1 => Code
+##E ====== => Heading
+##E *emphasis* => Emphasis
+##E _also em_ => Emphasis
+##E **strong** => Strong
+##E __also strong__ => Strong
+##E inline code => Code
+##E > quoted line => Quote
+##E - ~1 => ListMarker
+##E [ ] => ListMarker
+##E [x] => ListMarker
+##E 1. => ListMarker
+##E 2) => ListMarker
+##E [link](http://example.com) => Link
+##E ![img](a.png) => Link
+##E <https://auto.link> => Link
+##E https://bare.example/x => Link
+##E [ref]: http://example.com "Title" => Link
+##E const x = 1; => Code
+##E html comment => Comment
+##E <div class="a"> => Tag
+##E &amp; => Entity
+##E \* => Escape
+##E |---|---| => Punctuation
+# Title with `code`
+Setext
+======
+Some *emphasis*, _also em_, **strong**, __also strong__ and `inline code`.
+> quoted line
+- item one
+* [ ] todo
++ [x] done
+1. first
+2) second
+[link](http://example.com) ![img](a.png) <https://auto.link> https://bare.example/x
+[ref]: http://example.com "Title"
+```js
+const x = 1;
+```
+<!-- html comment -->
+<div class="a">tag</div>
+Fish &amp; chips \* escaped
+| a | b |
+|---|---|
+
+##### Diff
+##E diff --git a/f.txt b/f.txt => DiffHeader
+##E index 83db48f..bf2a1c3 100644 => DiffHeader
+##E --- a/f.txt => DiffHeader
+##E +++ b/f.txt => DiffHeader
+##E @@ -1,3 +1,4 @@ => DiffHeader
+##E -removed line => DiffRemoved
+##E +added line => DiffAdded
+##E +another => DiffAdded
+##E No newline at end of file => Comment
+diff --git a/f.txt b/f.txt
+index 83db48f..bf2a1c3 100644
+--- a/f.txt
++++ b/f.txt
+@@ -1,3 +1,4 @@ func()
+ context line
+-removed line
++added line
++another
+\ No newline at end of file
+
+##### Latex
+##E \documentclass => Preprocessor
+##E \usepackage => Preprocessor
+##E a comment => Comment
+##E \begin ~1 => Control
+##E document ~2 => Type
+##E \section => Heading
+##E \label => Keyword
+##E sec:intro => Constant
+##E \textbf => Keyword
+##E \% => Escape
+##E mc => Number
+##E \alpha => Keyword
+##E \sum => Keyword
+##E \item => ListMarker
+##E key1 => Constant
+##E raw $x$ => Code
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+% a comment
+\begin{document}
+\section{Intro}\label{sec:intro}
+Text with $x^2 + y_1$ math and \textbf{bold} 100\% sure.
+\begin{equation}
+  E = mc^2 \alpha
+\end{equation}
+\[ \sum_{i=1}^n i \]
+\begin{itemize}
+  \item First \cite{key1}
+\end{itemize}
+\verb|raw $x$|
+\end{document}

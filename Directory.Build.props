@@ -1,0 +1,31 @@
+<Project>
+  <!-- Single source of truth for the application version (SemVer). -->
+  <PropertyGroup>
+    <VersionPrefix>0.5.0</VersionPrefix>
+    <Product>BetterNotepad</Product>
+    <Company>NemeWT10</Company>
+    <Authors>NemeWT10</Authors>
+    <Copyright>© 2026 NemeWT10</Copyright>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!-- InformationalVersion = <version>+<commit>.<build date>, shown in Settings → About. -->
+  <Target Name="BnVersionInfo" BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo">
+    <Exec Command="git rev-parse --short HEAD 2&gt;nul" ConsoleToMSBuild="true" IgnoreExitCode="true"
+          StandardOutputImportance="low" StandardErrorImportance="low" EchoOff="true"
+          WorkingDirectory="$(MSBuildThisFileDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="BnCommit" />
+      <Output TaskParameter="ExitCode" PropertyName="BnGitExit" />
+    </Exec>
+    <PropertyGroup>
+      <BnCommit Condition="'$(BnGitExit)' != '0' or '$(BnCommit)' == ''">local</BnCommit>
+      <BnBuildDate>$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</BnBuildDate>
+      <InformationalVersion>$(Version)+$(BnCommit).$(BnBuildDate)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

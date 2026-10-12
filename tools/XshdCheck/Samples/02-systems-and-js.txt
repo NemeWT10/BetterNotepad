@@ -1,0 +1,358 @@
+##### Go
+##E package => Keyword
+##E "fmt" => String
+##E handles => Comment
+##E type => Keyword
+##E Server ~2 => Type
+##E struct => Keyword
+##E string => Type
+##E json:"name" => String
+##E 1_000 => Number
+##E func => Keyword
+##E Start => Function
+##E error => Type
+##E defer => Keyword
+##E Println => Function
+##E make => Function
+##E chan => Keyword
+##E range => Control
+##E select => Control
+##E case => Control
+##E Printf => Function
+##E \n => Escape
+##E default => Control
+##E 0x1F => Number
+##E 3.5e2 => Number
+##E 'a' => String
+##E nil => Constant
+##E ListenAndServe => Function
+##E goto => Control
+##E end => Label
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+// Server handles requests.
+type Server struct {
+	Name string `json:"name"`
+	port int
+}
+
+const MaxConns = 1_000
+
+func (s *Server) Start(addr string) error {
+	defer fmt.Println("done")
+	ch := make(chan int, 3)
+	for i := range 10 {
+		select {
+		case v := <-ch:
+			fmt.Printf("got %d\n", v)
+		default:
+		}
+	}
+	x := 0x1F + 3.5e2
+	r := 'a'
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		return err
+	}
+	goto end
+end:
+	return nil
+}
+
+##### Rust
+##E std => Type
+##E HashMap => Type
+##E parsed => DocComment
+##E derive => Attribute
+##E pub => Keyword
+##E struct => Keyword
+##E Config ~1 => Type
+##E 'a => Label
+##E u32 => Type
+##E impl => Keyword
+##E fn => Keyword
+##E new => Function
+##E Self => Type
+##E main => Function
+##E let => Keyword
+##E mut => Keyword
+##E i32 => Type
+##E 1_000u64 => Number
+##E 0xFFi32 => Number
+##E raw => String
+##E '\n' => String
+##E println! => Function
+##E \t => Escape
+##E 10 => Number
+##E match => Control
+##E Some => Function
+##E None => Constant
+##E break => Control
+##E b"bytes" => String
+##E return => Control
+use std::collections::HashMap;
+
+/// A parsed config.
+#[derive(Debug, Clone)]
+pub struct Config<'a> {
+    name: &'a str,
+    retries: u32,
+}
+
+impl<'a> Config<'a> {
+    pub fn new(name: &'a str) -> Self {
+        Self { name, retries: 3 }
+    }
+}
+
+fn main() {
+    let mut map: HashMap<String, i32> = HashMap::new();
+    let n = 1_000u64 + 0xFFi32 as u64;
+    let s = r#"raw "text""#;
+    let c = '\n';
+    println!("Hello {}!\t", n);
+    for i in 0..10 {
+        match map.get("k") { Some(v) => println!("{v}"), None => break }
+    }
+    let t = b"bytes";
+    if let Some(x) = map.get("a") { return; }
+}
+
+##### Swift
+##E import => Keyword
+##E user ~1 => DocComment
+##E @available => Attribute
+##E struct => Keyword
+##E User ~1 => Type
+##E Codable => Type
+##E let => Keyword
+##E Int => Type
+##E 0xFF_FF => Number
+##E func => Keyword
+##E greet => Function
+##E Multi => String
+##E \( => Punctuation
+##E name ~2 => Property
+##E "anon" => String
+##E guard => Control
+##E else => Control
+##E return => Control
+##E "none" => String
+##E where => Control
+##E \n => Escape
+##E #if => Preprocessor
+##E DEBUG => Constant
+##E $0 => Variable
+import Foundation
+
+/// A user.
+@available(iOS 15, *)
+struct User: Codable {
+    let id: Int
+    var name: String?
+    static let limit = 0xFF_FF
+}
+
+func greet(_ user: User, times: Int = 2) -> String {
+    let text = """
+        Multi \(user.name ?? "anon")
+        """
+    guard let n = user.name else { return "none" }
+    for i in 0..<times where i % 2 == 0 {
+        print("Hi \(n)\n", i)
+    }
+    #if DEBUG
+    print("debug")
+    #endif
+    let f = { $0 + 1 }
+    return text
+}
+
+##### Dart
+##E import => Keyword
+##E package:flutter/material.dart => String
+##E counter => DocComment
+##E @immutable => Attribute
+##E class => Keyword
+##E Counter ~1 => Type
+##E extends => Keyword
+##E StatelessWidget => Type
+##E final => Keyword
+##E int => Type
+##E required => Keyword
+##E @override => Attribute
+##E Widget => Type
+##E build => Function
+##E var => Keyword
+##E 'World' => String
+##E $name => Variable
+##E length => Property
+##E \n ~1 => Escape
+##E $escape => String
+##E 0xFF => Number
+##E 1.5e3 => Number
+##E for => Control
+##E  in  => Keyword
+##E continue => Control
+##E return => Control
+##E Text => Function
+##E style => Property
+##E fontSize => Property
+##E 14.0 => Number
+##E null => Constant
+import 'package:flutter/material.dart';
+
+/// A counter widget.
+@immutable
+class Counter extends StatelessWidget {
+  final int start;
+  const Counter({super.key, required this.start});
+
+  @override
+  Widget build(BuildContext context) {
+    var name = 'World';
+    final msg = "Hello $name and ${name.length}\n";
+    final raw = r'no $escape\n';
+    final big = 0xFF + 1.5e3;
+    for (final i in [1, 2, 3]) {
+      if (i > 1) continue;
+    }
+    return Text(msg, style: TextStyle(fontSize: 14.0), key: null);
+  }
+}
+
+##### JavaScript
+##E #!/usr/bin/env node => Comment
+##E 'use strict' => String
+##E import => Keyword
+##E from => Keyword
+##E 'fs' => String
+##E const => Keyword
+##E require => Function
+##E Adds => DocComment
+##E @param => Directive
+##E {number} => Type
+##E export => Keyword
+##E async => Keyword
+##E function => Keyword
+##E add ~1 => Function
+##E 0x10 => Number
+##E ab+c\/[a-z]/gi => Regex
+##E sum: => String
+##E map => Function
+##E => => Operator
+##E \n => Escape
+##E 1_000n => Number
+##E undefined => Constant
+##E return => Control
+##E null => Constant
+##E of => Keyword
+##E await => Keyword
+##E console => Type
+##E log => Function
+##E name => Property
+##E 1.5e3 => Number
+##E  / ~2 => Operator
+##E key => Property
+##E other => Property
+##E true => Constant
+##E class => Keyword
+##E Foo => Type
+##E Bar => Type
+##E static => Keyword
+##E get => Keyword
+##E size => Function
+##E this => Keyword
+##E <div => Tag
+##E className => AttrName
+##E onClick => AttrName
+#!/usr/bin/env node
+'use strict';
+import fs from 'fs';
+const { readFile } = require("fs/promises");
+
+/**
+ * Adds numbers.
+ * @param {number} a first
+ */
+export async function add(a, b = 0x10) {
+  const re = /ab+c\/[a-z]/gi;
+  const msg = `sum: ${a + b} and ${items.map(x => `<${x}>`).join(", ")}\n`;
+  if (a > 1_000n || b === undefined) return null;
+  for (const item of list) await console.log(item?.name, 1.5e3);
+  const total = a / 2 / b;
+  return { key: "v", other: true };
+}
+
+class Foo extends Bar {
+  static #count = 0;
+  get size() { return this.#count; }
+}
+const el = <div className="x" onClick={go}>hi</div>;
+
+##### TypeScript
+##E type => Keyword
+##E from => Keyword
+##E "./foo" => String
+##E generic => DocComment
+##E @Injectable => Attribute
+##E export => Keyword
+##E class => Keyword
+##E Repo => Type
+##E extends => Keyword
+##E number => Type
+##E implements => Keyword
+##E IRepo => Type
+##E private => Keyword
+##E readonly => Keyword
+##E Map => Type
+##E constructor => Keyword
+##E public => Keyword
+##E string => Type
+##E async => Keyword
+##E find => Function
+##E Promise => Type
+##E undefined => Constant
+##E item- => String
+##E this => Keyword
+##E get => Function
+##E ?? => Operator
+##E await => Keyword
+##E  as  => Keyword
+##E interface => Keyword
+##E Options => Type
+##E verbose => Property
+##E boolean => Type
+##E retries => Property
+##E type ~2 => Keyword
+##E Handler => Type
+##E enum => Keyword
+##E Color => Type
+##E declare => Keyword
+##E module => Keyword
+##E unknown => Type
+##E 0b1010 => Number
+##E 10n => Number
+import type { Foo } from "./foo";
+
+/** A generic repo. */
+@Injectable()
+export class Repo<T extends { id: number }> implements IRepo<T> {
+  private readonly items = new Map<number, T>();
+  constructor(private readonly db: Database, public name?: string) {}
+
+  async find(id: number): Promise<T | undefined> {
+    const key: string = `item-${id}`;
+    return this.items.get(id) ?? (await this.db.load<T>(key)) as T;
+  }
+}
+
+interface Options { verbose: boolean; retries?: number }
+type Handler = (e: Event) => void;
+enum Color { Red = 1, Green }
+declare module "x" { export const v: unknown; }
+let n: number = 0b1010, big = 10n;

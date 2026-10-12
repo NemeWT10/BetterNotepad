@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: CMake. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="CMake" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="\#\[=*\[" end="\]=*\]"/>
+    <Span color="Comment" ruleSet="Cmt" begin="\#"/>
+    <Span color="String" multiline="true" begin="\[=*\[" end="\]=*\]"/>
+    <Span color="String" multiline="true" ruleSet="CmStr" begin="&quot;" end="&quot;"/>
+    <Span color="Variable" ruleSet="CmGen">
+      <Begin color="Punctuation">\$&lt;</Begin>
+      <End color="Punctuation">&gt;</End>
+    </Span>
+    <Span color="Variable" ruleSet="CmVar">
+      <Begin color="Punctuation">\$(?:ENV|CACHE)?\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Rule color="Variable">@[A-Za-z_]\w*@</Rule>
+    <Rule color="Control">(?i:(?&lt;![\w.-])(?:endforeach|continue|endblock|endwhile|foreach|elseif|return|block|break|endif|while|else|if)(?=\s*\())</Rule>
+    <Rule color="Keyword">(?i:(?&lt;![\w.-])(?:endfunction|endmacro|function|macro)(?=\s*\())</Rule>
+    <Rule color="Keyword">(?&lt;![\w.-])(?:
+      COMPILE_DEFINITIONS|AUTHOR_WARNING|MAKE_DIRECTORY|RELATIVE_PATH|GLOB_RECURSE|IS_DIRECTORY|
+      PARENT_SCOPE|DEPRECATION|DESTINATION|FATAL_ERROR|COMPONENTS|SEND_ERROR|ALL_BUILD|DIRECTORY|
+      INTERFACE|LANGUAGES|NAMESPACE|TIMESTAMP|FILEPATH|INTERNAL|OPTIONAL|REQUIRED|STREQUAL|COMMAND|
+      DEFINED|GREATER|IN_LIST|MATCHES|PATTERN|PREPEND|PRIVATE|REPLACE|TARGETS|VERSION|WARNING|APPEND|
+      CONFIG|EXISTS|EXPORT|MODULE|OBJECT|POLICY|PUBLIC|SHARED|STATIC|STATUS|STRING|TARGET|CACHE|EQUAL|
+      FILES|FORCE|REGEX|WRITE|BOOL|COPY|GLOB|LESS|PATH|READ|AND|NOT|OR
+    )\b</Rule>
+    <Rule color="Constant">(?&lt;![\w.-])(?:NOTFOUND|IGNORE|FALSE|TRUE|OFF|YES|NO|ON|N|Y)\b</Rule>
+    <Rule color="Function">(?&lt;![\w.${-])[A-Za-z_]\w*(?=\s*\()</Rule>
+    <Rule color="Constant">(?&lt;![\w.])[A-Z][A-Z0-9_]{2,}\b</Rule>
+    <Rule color="Number">(?&lt;![\w.])\d+(?:\.\d+)*\b</Rule>
+    <Rule color="Operator">=</Rule>
+    <Rule color="Punctuation">[()]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="CmGen">
+    <Span color="Variable" ruleSet="CmGen">
+      <Begin color="Punctuation">\$&lt;</Begin>
+      <End color="Punctuation">&gt;</End>
+    </Span>
+    <Span color="Variable" ruleSet="CmVar">
+      <Begin color="Punctuation">\$(?:ENV|CACHE)?\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Rule color="Constant">[A-Z][A-Z0-9_]+</Rule>
+    <Rule color="Punctuation">[:,;]</Rule>
+  </RuleSet>
+
+  <RuleSet name="CmVar">
+    <Span color="Variable" ruleSet="CmVar">
+      <Begin color="Punctuation">\$(?:ENV|CACHE)?\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+  </RuleSet>
+
+  <RuleSet name="CmStr">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+    <Span color="Variable" ruleSet="CmVar">
+      <Begin color="Punctuation">\$(?:ENV|CACHE)?\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Span color="Variable" ruleSet="CmGen">
+      <Begin color="Punctuation">\$&lt;</Begin>
+      <End color="Punctuation">&gt;</End>
+    </Span>
+    <Rule color="Variable">@[A-Za-z_]\w*@</Rule>
+  </RuleSet>
+</SyntaxDefinition>

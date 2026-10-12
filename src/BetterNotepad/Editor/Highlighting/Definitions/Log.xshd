@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Log. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Log" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Property" exampleText="obj.Name"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="LogError" exampleText="ERROR"/>
+  <Color name="LogWarning" exampleText="WARN"/>
+  <Color name="LogInfo" exampleText="INFO"/>
+  <Color name="LogDebug" exampleText="DEBUG"/>
+  <Color name="LogTrace" exampleText="TRACE"/>
+  <Color name="LogTimestamp" exampleText="2026-01-01 12:00:00"/>
+
+  <RuleSet>
+    <Rule color="LogTimestamp">\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:\s?(?:Z|[+-]\d{2}:?\d{2}))?|\b\d{4}[-/.]\d{2}[-/.]\d{2}\b|\b\d{2}/\d{2}/\d{4}\b|\b\d{2}:\d{2}:\d{2}(?:[.,]\d+)?\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\b|\b\d{2}/[A-Z][a-z]{2}/\d{4}:\d{2}:\d{2}:\d{2}(?:\s[+-]\d{4})?</Rule>
+    <Rule color="LogError">\[?\b(?i:FATAL|CRITICAL|CRIT|SEVERE|EXCEPTION|ERROR|ERR|FAIL(?:ED|URE)?|PANIC|EMERG(?:ENCY)?|ALERT)\b\]?</Rule>
+    <Rule color="LogWarning">\[?\b(?i:WARN(?:ING)?)\b\]?</Rule>
+    <Rule color="LogInfo">\[?\b(?i:INFO|NOTICE|SUCCESS)\b\]?</Rule>
+    <Rule color="LogDebug">\[?\b(?i:DEBUG|DBG)\b\]?</Rule>
+    <Rule color="LogTrace">\[?\b(?i:TRACE|VERBOSE|FINE|FINER|FINEST)\b\]?</Rule>
+    <Span color="String" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+    <Rule color="String">(?&lt;!\w)'[^'\n]{0,200}'(?!\w)</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file|wss?)://[^\s\"'&lt;&gt;)\]]+</Rule>
+    <Rule color="Constant">\b[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\b</Rule>
+    <Rule color="Number">\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b|\b0x[0-9a-fA-F]+\b|(?&lt;![\w.-])-?\d+(?:\.\d+)?\b</Rule>
+    <Rule color="Constant">\b(?:true|false|null|nil|None)\b</Rule>
+    <Rule color="Property">\b[A-Za-z_][\w.-]*(?==)</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

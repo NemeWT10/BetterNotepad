@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Ini. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Ini" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="Key" exampleText="name:"/>
+  <Color name="Section" exampleText="[section]"/>
+
+  <RuleSet>
+    <Span color="Comment" ruleSet="Cmt" begin="^\s*[;\#]|(?&lt;=\s);"/>
+    <Rule color="Section">^\s*\[[^\]\n]*\]</Rule>
+    <Rule color="Key">^\s*\"[^\"\n]*\"(?=\s*=)|^\s*@(?=\s*=)</Rule>
+    <Rule color="Key">^\s*(?:export\s+)?[^\s=:;\#\[\"][^=:;\#\n]*?(?=\s*[=:])</Rule>
+    <Span color="String" ruleSet="Esc" begin="(?&lt;==\s*)&quot;" end="&quot;"/>
+    <Span color="String" begin="(?&lt;==\s*)'" end="'"/>
+    <Rule color="Variable">\$\{[^}\n]*\}|%[A-Za-z_][\w]*%|\$\([^)\n]*\)</Rule>
+    <Rule color="Constant">(?&lt;=[=:]\s*)(?i:true|false|yes|no|on|off|null|none)(?=\s*(?:[;\#]|$))</Rule>
+    <Rule color="Number">(?&lt;=[=:]\s*)[-+]?(?:0x[0-9a-fA-F]+|\d[\d.]*)(?=\s*(?:[;\#]|$))</Rule>
+    <Rule color="Number">(?&lt;=[=,:]\s*)(?i:dword:[0-9a-f]+|hex(?:\([0-9a-f]+\))?:[0-9a-f,\\\s]*)</Rule>
+    <Rule color="String">(?&lt;=[=:]\s*)[^\s\"'\#;][^\#;\n]*?(?=\s*(?:[;\#]|$))</Rule>
+    <Rule color="Operator">[=:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

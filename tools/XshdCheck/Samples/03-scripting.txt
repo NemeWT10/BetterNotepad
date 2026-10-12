@@ -1,0 +1,433 @@
+##### Python
+##E #!/usr/bin/env python3 => Comment
+##E Module docstring. => String
+##E import => Keyword
+##E from => Keyword
+##E Optional => Type
+##E @dataclass => Attribute
+##E class ~2 => Keyword
+##E Point ~1 => Type
+##E Base => Type
+##E  int  => Type
+##E NAME => Constant
+##E def => Keyword
+##E dist => Function
+##E self => Variable
+##E "Point" => String
+##E scale => Variable
+##E 1.5e3 => Number
+##E float => Type
+##E if => Control
+##E not => Keyword
+##E 0x1F => Number
+##E raise => Control
+##E ValueError => Type
+##E bad => String
+##E {{ => Escape
+##E \n => Escape
+##E 1_000 => Number
+##E async => Keyword
+##E main => Function
+##E list => Type
+##E None => Constant
+##E for => Control
+##E  in  => Keyword
+##E enumerate => Function
+##E print => Function
+##E upper => Function
+##E \d => String
+##E \x00 => Escape
+##E with => Control
+##E await => Keyword
+##E sleep => Function
+##E match => Control
+##E case => Control
+##E "go" => String
+##E pass => Control
+##E try => Control
+##E except => Control
+##E KeyError => Type
+##E  as  => Keyword
+##E ... => Constant
+##E triple => String
+##E \t => Escape
+##E lambda => Keyword
+##E __name__ => Constant
+##E True => Constant
+#!/usr/bin/env python3
+"""Module docstring."""
+import os
+from typing import Optional
+
+@dataclass
+class Point(Base):
+    x: int = 0
+    NAME = "pt"
+
+    def dist(self, other: "Point", *, scale=1.5e3) -> float:
+        if not other or self.x == 0x1F:
+            raise ValueError(f"bad {other!r:>10} {{literal}} \n")
+        return (self.x ** 2) / 1_000
+
+async def main(items: list[str]) -> None:
+    for i, item in enumerate(items):
+        print(f'{i}: {item.upper()}', r"raw \d+", b"bytes\x00")
+    async with lock:
+        await asyncio.sleep(1)
+    match command:
+        case "go": pass
+    try:
+        value = d["key"] if d else None
+    except (KeyError, TypeError) as e:
+        ...
+    x = 'it''s' + """triple
+    quoted \t line"""
+    lam = lambda a, b=2: a @ b
+    print(__name__, True)
+
+##### Ruby
+##E # frozen_string_literal: true => Comment
+##E require => Function
+##E 'json' => String
+##E block comment => Comment
+##E module => Keyword
+##E Shop => Type
+##E class => Keyword
+##E Cart => Type
+##E Base => Type
+##E attr_reader => Function
+##E :items => Constant
+##E MAX => Constant
+##E def => Keyword
+##E initialize => Function
+##E @items => Variable
+##E @@count => Variable
+##E $debug => Variable
+##E true ~2 => Constant
+##E add? => Function
+##E qty => Property
+##E return => Control
+##E false => Constant
+##E unless => Control
+##E puts => Function
+##E Added => String
+##E #{ => Punctuation
+##E upcase => Property
+##E \t => Escape
+##E if => Control
+##E \' => Escape
+##E /ab+c\/\d+/i => Regex
+##E %w[a b c] => String
+##E "k" => String
+##E :sym => Constant
+##E 0x1F => Number
+##E case ~2 => Control
+##E when => Control
+##E then => Control
+##E nil => Constant
+##E end ~2 => Keyword
+# frozen_string_literal: true
+require 'json'
+
+=begin
+block comment
+=end
+
+module Shop
+  class Cart < Base
+    attr_reader :items, :total
+    MAX = 10
+
+    def initialize(items = [], opts: {})
+      @items = items
+      @@count ||= 0
+      $debug = true
+    end
+
+    def add?(item, qty: 1)
+      return false unless item.valid?
+      puts "Added #{item.name.upcase} x#{qty}\t!" if qty > 0
+      label = 'single \'quoted\' #{no}'
+      pattern = /ab+c\/\d+/i
+      list = %w[a b c]
+      @items << { id: 1, "k" => :sym, key: 0x1F }
+      case qty when 1..5 then puts 'few' else nil end
+    end
+  end
+end
+
+##### Lua
+##E #!/usr/bin/env lua => Comment
+##E line comment => Comment
+##E block => Comment
+##E local => Keyword
+##E <const> => Attribute
+##E Lua => String
+##E \n => Escape
+##E \x41 => Escape
+##E \u{263A} => Escape
+##E long ~2 => String
+##E function => Keyword
+##E greet => Function
+##E self => Variable
+##E nil => Constant
+##E then => Keyword
+##E return => Control
+##E end => Keyword
+##E for => Control
+##E do => Keyword
+##E print => Function
+##E format => Function
+##E 0xFF => Number
+##E 1e3 => Number
+##E 3.14 => Number
+##E true => Constant
+##E while => Control
+##E and => Keyword
+##E not => Keyword
+##E break => Control
+##E goto => Control
+##E ::done:: => Label
+##E string ~2 => Type
+##E upper => Function
+##E .. => Operator
+##E tostring => Function
+##E 42 => Number
+#!/usr/bin/env lua
+-- line comment
+--[[ block
+comment ]]
+local M = {}
+local name <const> = "Lua\n\x41\u{263A}"
+local long = [[long
+string]]
+
+function M.greet(self, who)
+  if who == nil then return end
+  for i = 1, 10, 2 do
+    print(("Hi %s"):format(who), i, 0xFF, 1e3, 3.14)
+  end
+  local t = { a = 1, [2] = true }
+  while #t > 0 and not false do break end
+  goto done
+  ::done::
+  return string.upper(who) .. tostring(42)
+end
+
+return M
+
+##### R
+##E Add numbers => DocComment
+##E @param => Directive
+##E function => Keyword
+##E 2L => Number
+##E if => Control
+##E is.na => Function
+##E %in% => Operator
+##E return => Control
+##E NULL => Constant
+##E data.frame => Function
+##E "p" => String
+##E NA => Constant
+##E <- => Operator
+##E |> => Operator
+##E subset => Function
+##E nrow => Function
+##E  in  => Keyword
+##E seq_len => Function
+##E next => Control
+##E \t => Escape
+##E TRUE => Constant
+##E library => Function
+##E 1.5e2 => Number
+#' Add numbers
+#' @param x a number
+add <- function(x, y = 2L) {
+  if (is.na(x) || x %in% c(1, 2)) return(NULL)
+  df <- data.frame(a = 1:3, b = c("p", "q"))
+  df$a[df$a > 1.5e2] <- NA
+  result <- df |> subset(a > 1) |> nrow()
+  for (i in seq_len(10)) next
+  msg <- 'single\tquote'
+  TRUE && !FALSE
+}
+library(dplyr)
+
+##### Shell
+##E #!/bin/bash => Comment
+##E deploy script => Comment
+##E set => Keyword
+##E -euo => Attribute
+##E NAME ~1 => Variable
+##E "world" => String
+##E count => Variable
+##E export => Keyword
+##E $HOME => Variable
+##E ${PATH} => Variable
+##E greet => Function
+##E local => Keyword
+##E ${1:-$NAME} => Variable
+##E echo ~1 => Function
+##E Hello, => String
+##E \" => Escape
+##E date => Function
+##E uname => Function
+##E $novar => String
+##E for => Control
+##E  in  => Control
+##E do => Control
+##E if => Control
+##E [[ => Punctuation
+##E -f => Attribute
+##E $# => Variable
+##E -gt => Attribute
+##E grep => Function
+##E --color => Attribute
+##E "TODO" => String
+##E sort => Function
+##E elif => Control
+##E continue => Control
+##E fi => Control
+##E done => Control
+##E case => Control
+##E esac => Control
+##E exit => Control
+##E cat => Function
+##E ls => Function
+#!/bin/bash
+# deploy script
+set -euo pipefail
+NAME="world"
+count=$((1 + 2))
+export PATH="$HOME/bin:${PATH}"
+
+greet() {
+  local who="${1:-$NAME}"
+  echo "Hello, $who! \"quoted\" $(date +%F) `uname`"
+  echo 'single $novar'
+}
+
+for f in *.txt; do
+  if [[ -f "$f" && $# -gt 0 ]]; then
+    grep -rn --color=auto "TODO" "$f" | sort -u > out.log
+  elif [ "$f" = "x" ]; then continue
+  fi
+done
+case "$1" in start) echo go ;; *) exit 1 ;; esac
+cat <<< "$NAME" ; ls -la /tmp
+
+##### Batch
+##E @ => Operator
+##E echo ~1 => Keyword
+##E This is a comment => Comment
+##E another comment => Comment
+##E setlocal => Keyword
+##E set ~2 => Keyword
+##E /a => Attribute
+##E %COUNT% => Variable
+##E if => Control
+##E %1 => Variable
+##E goto => Control
+##E :usage ~1 => Label
+##E for => Control
+##E %%i => Variable
+##E  in  => Control
+##E exist => Control
+##E copy => Keyword
+##E /y => Attribute
+##E %~dp0 => Variable
+##E else => Control
+##E xcopy => Function
+##E /s => Attribute
+##E %TEMP% => Variable
+##E !NAME! => Variable
+##E call => Keyword
+##E :helper ~1 => Label
+##E exit => Control
+##E /b => Attribute
+##E && => Operator
+##E :usage ~2 => Label
+@echo off
+rem This is a comment
+:: another comment
+setlocal EnableDelayedExpansion
+set NAME=World
+set /a COUNT=%COUNT%+1
+if "%1"=="" goto :usage
+for %%i in (*.txt) do echo File %%i
+if exist "%USERPROFILE%\file.txt" (
+    copy /y "%~dp0src" "C:\dst" >nul
+) else (
+    xcopy /s /e %TEMP%\a !NAME!
+)
+call :helper 5
+goto end
+:usage
+echo Usage: %0 ^<arg^>
+exit /b 1
+:helper
+echo %~1 && echo done
+:end
+
+##### PowerShell
+##E .SYNOPSIS => Directive
+##E Does things. => Comment
+##E CmdletBinding => Attribute
+##E param => Keyword
+##E [string] => Type
+##E $Name => Variable
+##E "World" => String
+##E function => Keyword
+##E Get-Greeting => Function
+##E Hello => String
+##E $who => Variable
+##E $( => Punctuation
+##E ToUpper => Function
+##E `n => Escape
+##E `" => Escape
+##E $env:USERNAME => Variable
+##E '' => Escape
+##E Here => String
+##E return => Control
+##E # comment => Comment
+##E foreach => Control
+##E -gt ~1 => Operator
+##E -and => Operator
+##E $true => Constant
+##E Write-Host => Function
+##E -ForegroundColor => Attribute
+##E Get-ChildItem => Function
+##E -Path => Attribute
+##E Where-Object => Function
+##E $_ => Variable
+##E 1KB => Number
+##E Select-Object => Function
+##E [Math] => Type
+##E Pow => Function
+##E 0x10 => Number
+##E $null => Constant
+##E -eq => Operator
+<#
+.SYNOPSIS
+Does things.
+#>
+[CmdletBinding()]
+param([string]$Name = "World", [int]$Count = 3)
+
+function Get-Greeting {
+    param($who)
+    $msg = "Hello $who, $($Name.ToUpper()) `n `"q`" $env:USERNAME"
+    $single = 'it''s'
+    $here = @"
+Here $Name
+"@
+    return $msg
+}
+
+# comment
+foreach ($i in 1..$Count) {
+    if ($i -gt 1 -and $true) { Write-Host "Item $i" -ForegroundColor Green }
+}
+Get-ChildItem -Path C:\temp -Recurse | Where-Object { $_.Length -gt 1KB } | Select-Object Name
+[Math]::Pow(2, 0x10)
+$null -eq $x

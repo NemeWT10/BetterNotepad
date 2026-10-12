@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Yaml. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Yaml" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Preprocessor" exampleText="#include"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="ListMarker" exampleText="- item"/>
+  <Color name="Key" exampleText="name:"/>
+
+  <RuleSet>
+    <Span color="Comment" ruleSet="Cmt" begin="(?:^|(?&lt;=\s))\#"/>
+    <Rule color="Preprocessor">^%[A-Za-z]+.*</Rule>
+    <Rule color="Punctuation">^(?:---|\.\.\.)(?=\s|$)</Rule>
+    <Span color="Variable" begin="\{\{" end="\}\}"/>
+    <Rule color="Key">(?&lt;=^\s*(?:-\s+)*)(?:"(?:[^"\\\n]|\\.)*"|\'[^\'\n]*\')(?=\s*:(?:\s|$))</Rule>
+    <Rule color="Key">(?&lt;=^\s*(?:-\s+)*)[^\s\#:\[\]{},&amp;*!|&gt;'\"%@`-][^\#:\n]*?(?=\s*:(?:\s|$))</Rule>
+    <Rule color="Key">(?&lt;=[{,]\s*)[A-Za-z_][\w.-]*(?=\s*:(?:\s|$))</Rule>
+    <Span color="String" multiline="true" ruleSet="YDq" begin="(?&lt;=(?:^|[\s:\[,{-])\s*)&quot;(?!(?:[^&quot;\\\n]|\\.)*&quot;\s*:(?:\s|$))" end="&quot;"/>
+    <Span color="String" multiline="true" ruleSet="YSq" begin="(?&lt;=(?:^|[\s:\[,{-])\s*)'(?!(?:[^'\n]|'')*'\s*:(?:\s|$))" end="'(?!')"/>
+    <Rule color="ListMarker">^\s*-(?=\s|$)|(?&lt;=^\s*(?:-\s+)+)-(?=\s|$)</Rule>
+    <Rule color="Variable">[&amp;*][A-Za-z_][\w-]*</Rule>
+    <Rule color="Attribute">!(?:![A-Za-z]+|[A-Za-z][\w!:./-]*)</Rule>
+    <Rule color="Variable">\$\{[^}\n]*\}</Rule>
+    <Rule color="Operator">(?&lt;=:\s+)[|&gt;][+-]?\d*(?=\s*(?:\#.*)?$)</Rule>
+    <Rule color="Constant">(?&lt;=(?:^|[\s:\[,{-])\s*)(?:true|false|null|True|False|Null|TRUE|FALSE|NULL|yes|no|on|off|Yes|No|On|Off|~)(?=\s*(?:$|,|\]|\}|\#))</Rule>
+    <Rule color="Number">(?&lt;=(?:^|[\s:\[,{-])\s*)[-+]?(?:0x[0-9a-fA-F]+|0o[0-7]+|(?:\d[\d_]*\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|\.inf|\.nan)(?=\s*(?:$|,|\]|\}|\#))</Rule>
+    <Rule color="String">(?&lt;=:\s+)[^\s\#\[{\"'|&gt;&amp;*!%@`-](?:[^\#\n]|(?&lt;=\S)\#)*?(?=\s+\#|\s*$)</Rule>
+    <Rule color="String">(?&lt;=^\s*(?:-\s+)+)[^\s\#\[{\"'|&gt;&amp;*!%@`-](?![^\#\n]*?:(?:\s|$))(?:[^\#\n]|(?&lt;=\S)\#)*?(?=\s+\#|\s*$)</Rule>
+    <Rule color="Punctuation">[\[\]{},:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="YDq">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+    <Rule color="Variable">\$\{[^}\n]*\}</Rule>
+  </RuleSet>
+
+  <RuleSet name="YSq">
+    <Span color="Escape" begin="''" end="(?=.)"/>
+  </RuleSet>
+</SyntaxDefinition>

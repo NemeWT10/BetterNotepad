@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Batch. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Batch" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Label" exampleText="loop:"/>
+
+  <RuleSet ignoreCase="true">
+    <Span color="Comment" begin="(?i:(?&lt;![\w.%])@?rem(?=\s|$))"/>
+    <Span color="Comment" begin="^\s*::"/>
+    <Rule color="Label">^\s*:(?!:)[A-Za-z_][\w.-]*</Rule>
+    <Rule color="Label">(?i:(?&lt;=\bgoto\s+):?[\w.-]+|(?&lt;=\bcall\s+):[\w.-]+)</Rule>
+    <Span color="String" ruleSet="BatStr" begin="&quot;" end="&quot;"/>
+    <Rule color="Variable">%(?:~[a-zA-Z]*)?[0-9*]|%%~?[A-Za-z]|%[^%\s]+%|![^!\s]+!</Rule>
+    <Rule color="Control">(?i:(?&lt;![\w.%!-])(?:errorlevel|defined|exist|else|exit|goto|equ|for|geq|gtr|leq|lss|neq|not|do|if|in)\b)</Rule>
+    <Rule color="Keyword">(?i:(?&lt;![\w.%!-])(?:
+      endlocal|setlocal|prompt|rename|verify|assoc|break|chdir|color|erase|ftype|mkdir|pause|pushd|rmdir|
+      shift|start|title|call|copy|echo|mode|move|path|popd|type|cls|del|dir|rem|ren|set|ver|vol|cd|md|rd
+    )\b)</Rule>
+    <Rule color="Function">(?i:(?&lt;![\w.%!-])(?:
+      powershell|forfiles|ipconfig|robocopy|schtasks|taskkill|tasklist|findstr|msiexec|takeown|timeout|
+      attrib|chkdsk|choice|format|icacls|netsh|where|xcopy|comp|curl|dism|find|more|ping|pwsh|sort|tree|
+      wmic|cmd|net|reg|sfc|fc|sc
+    )\b)</Rule>
+    <Rule color="Attribute">(?&lt;=\s)/[A-Za-z?][\w:]*</Rule>
+    <Rule color="Number">(?&lt;![\w.])\d+\b</Rule>
+    <Rule color="Operator">@|&amp;&amp;|\|\||[|&lt;&gt;&amp;=^]+</Rule>
+    <Rule color="Punctuation">[()]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="BatStr" ignoreCase="true">
+    <Rule color="Variable">%(?:~[a-zA-Z]*)?[0-9*]|%%~?[A-Za-z]|%[^%\s]+%|![^!\s]+!</Rule>
+  </RuleSet>
+</SyntaxDefinition>

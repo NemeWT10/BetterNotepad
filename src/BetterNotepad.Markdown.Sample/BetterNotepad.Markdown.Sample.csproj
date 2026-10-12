@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Offscreen render harness for BetterNotepad.Markdown: no window is ever shown, PNGs go to tests\output\markdown. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Markdown.Sample</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BetterNotepad.Markdown\BetterNotepad.Markdown.csproj" />
+  </ItemGroup>
+
+</Project>

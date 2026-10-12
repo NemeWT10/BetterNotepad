@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: TypeScript. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="TypeScript" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Type" exampleText="int string"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="Property" exampleText="obj.Name"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="DocComment" exampleText="/// summary"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Tag" exampleText="&lt;div&gt;"/>
+  <Color name="AttrName" exampleText="class"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Regex" exampleText="/[a-z]+/g"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Rule color="Comment">^\#!.*</Rule>
+    <Span color="DocComment" multiline="true" ruleSet="Doc" begin="/\*\*(?![*/])" end="\*/"/>
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*(?!\*(?![*/]))" end="\*/"/>
+    <Span color="Comment" ruleSet="Cmt" begin="//"/>
+    <Span color="String" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+    <Span color="String" ruleSet="Esc" begin="'" end="'"/>
+    <Span color="String" multiline="true" ruleSet="Tmpl" begin="`" end="`"/>
+    <Rule color="Regex">(?&lt;=(?:^|[=(:,\[!&amp;|?{};+\-*%&lt;&gt;~^])\s*|\b(?:return|typeof|case|of|in)\s+)/(?![/*])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n\[])+/[dgimsuvy]*</Rule>
+    <Rule color="Tag">(?&lt;=[(=,:?&amp;|]\s*|\breturn\s+|^\s*)&lt;/?(?:[A-Za-z][\w.:-]*(?=[\s/&gt;])|(?=&gt;))</Rule>
+    <Rule color="Tag">/&gt;</Rule>
+    <Rule color="AttrName">(?&lt;=\s)[A-Za-z_][\w:-]*(?==(?![=&gt;]))</Rule>
+    <Rule color="Attribute">(?&lt;![\w$.])@[A-Za-z_$][\w$.]*</Rule>
+    <Rule color="Control">(?&lt;![\w$.])(?:continue|default|finally|return|switch|break|catch|throw|while|yield|case|else|for|try|do|if)\b</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])(?:
+      constructor|implements|instanceof|interface|namespace|protected|satisfies|abstract|accessor|
+      debugger|function|override|readonly|asserts|declare|extends|package|private|delete|export|import|
+      public|static|typeof|unique|async|await|class|const|infer|keyof|super|enum|this|void|with|let|new|
+      out|var|as|in|is|of
+    )\b</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])(?:get|set)\b(?=\s+[A-Za-z_$\[])</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])from\b(?=\s)</Rule>
+    <Rule color="Constant">(?&lt;![\w$.])(?:undefined|Infinity|false|null|true|NaN)\b</Rule>
+    <Rule color="Type">(?&lt;![\w$.])(?:
+      sessionStorage|localStorage|performance|__filename|globalThis|__dirname|navigator|document|location|
+      console|exports|history|process|Buffer|crypto|screen|window|self
+    )\b</Rule>
+    <Rule color="Type">(?&lt;![\w$.])module\b(?=\.)</Rule>
+    <Rule color="Type">(?&lt;![\w$.])(?:boolean|unknown|bigint|number|object|string|symbol|never|any)\b</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])type\b(?=\s+[A-Za-z_$][\w$]*\s*[=&lt;]|\s*\{)</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])module\b(?=\s)</Rule>
+    <Rule color="Keyword">(?&lt;![\w$.])global\b(?=\s*\{)</Rule>
+    <Rule color="Type">(?&lt;=\b(?:class|interface|enum|extends|implements|new|instanceof|type)\s+)[A-Za-z_$][\w$]*</Rule>
+    <Rule color="Number">\b0[xX][0-9a-fA-F_]+n?\b</Rule>
+    <Rule color="Number">\b0[bB][01_]+n?\b</Rule>
+    <Rule color="Number">\b0[oO][0-7_]+n?\b</Rule>
+    <Rule color="Number">(?&lt;![\w.])(?:\d[\d_]*(?:\.(?!\.)[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?\b</Rule>
+    <Rule color="Function">(?&lt;![\w$])[A-Za-z_$][\w$]*(?=\s*\()</Rule>
+    <Rule color="Property">(?&lt;=[{(,;]\s*|^\s*)[A-Za-z_$][\w$]*(?=\s*\??:(?![:=]))</Rule>
+    <Rule color="Constant">\b[A-Z][A-Z0-9_]{2,}\b</Rule>
+    <Rule color="Property">(?&lt;=\.)[A-Za-z_$][\w$]*\b</Rule>
+    <Rule color="Type">\b[A-Z]\w*\b</Rule>
+    <Rule color="Operator">[-+*%=&lt;&gt;!&amp;|^~?]+|/(?![/*])=?</Rule>
+    <Rule color="Punctuation">[{}()\[\];,.:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])@[A-Za-z]+</Rule>
+    <Rule color="Type">\{[^}\n]*\}</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Tmpl">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+    <Span color="Variable">
+      <Begin color="Punctuation">\$\{</Begin>
+      <End color="Punctuation">\}</End>
+      <RuleSet>
+        <Span color="String" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+        <Span color="String" ruleSet="Esc" begin="'" end="'"/>
+        <Span color="String" multiline="true" ruleSet="Tmpl" begin="`" end="`"/>
+        <Rule color="Keyword">(?&lt;![\w$.])(?:instanceof|function|delete|typeof|async|await|super|this|void|new|in|of)\b</Rule>
+        <Rule color="Constant">(?&lt;![\w$.])(?:undefined|Infinity|false|null|true|NaN)\b</Rule>
+        <Rule color="Type">(?&lt;![\w$.])(?:
+      sessionStorage|localStorage|performance|__filename|globalThis|__dirname|navigator|document|location|
+      console|exports|history|process|Buffer|crypto|screen|window|self
+    )\b</Rule>
+        <Rule color="Number">\b0[xX][0-9a-fA-F_]+n?\b</Rule>
+        <Rule color="Number">\b0[bB][01_]+n?\b</Rule>
+        <Rule color="Number">\b0[oO][0-7_]+n?\b</Rule>
+        <Rule color="Number">(?&lt;![\w.])(?:\d[\d_]*(?:\.(?!\.)[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?n?\b</Rule>
+        <Rule color="Function">(?&lt;![\w$])[A-Za-z_$][\w$]*(?=\s*\()</Rule>
+        <Rule color="Property">(?&lt;=\.)[A-Za-z_$][\w$]*\b</Rule>
+        <Rule color="Type">\b[A-Z]\w*\b</Rule>
+        <Rule color="Operator">[-+*%=&lt;&gt;!&amp;|^~?]+|/(?![/*])=?</Rule>
+        <Rule color="Punctuation">[()\[\],.;:]+</Rule>
+      </RuleSet>
+    </Span>
+  </RuleSet>
+</SyntaxDefinition>

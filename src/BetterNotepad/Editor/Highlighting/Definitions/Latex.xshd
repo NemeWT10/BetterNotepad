@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Latex. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Latex" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Type" exampleText="int string"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Preprocessor" exampleText="#include"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Heading" exampleText="# Title"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="Code" exampleText="`code`"/>
+  <Color name="ListMarker" exampleText="- item"/>
+
+  <RuleSet>
+    <Span color="Comment" ruleSet="Cmt" begin="(?&lt;!\\)%"/>
+    <Span color="Code" multiline="true">
+      <Begin color="Control">\\begin\{(?:verbatim|lstlisting|minted|Verbatim|comment)\*?\}</Begin>
+      <End color="Control">\\end\{(?:verbatim|lstlisting|minted|Verbatim|comment)\*?\}</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?\|</Begin>
+      <End>\|</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?\+</Begin>
+      <End>\+</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?!</Begin>
+      <End>!</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?/</Begin>
+      <End>/</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?@</Begin>
+      <End>@</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?=</Begin>
+      <End>=</End>
+    </Span>
+    <Span color="Code">
+      <Begin color="Keyword">\\verb\*?\#</Begin>
+      <End>\#</End>
+    </Span>
+    <Span color="Number" multiline="true" ruleSet="TexMath">
+      <Begin color="Control">\\begin\{(?:equation|align|gather|multline|eqnarray|displaymath|math|flalign|alignat)\*?\}</Begin>
+      <End color="Control">\\end\{(?:equation|align|gather|multline|eqnarray|displaymath|math|flalign|alignat)\*?\}</End>
+    </Span>
+    <Span color="Number" multiline="true" ruleSet="TexMath" begin="\$\$" end="\$\$"/>
+    <Span color="Number" ruleSet="TexMath" begin="(?&lt;![\\$])\$(?!\$)" end="(?&lt;!\\)\$"/>
+    <Span color="Number" multiline="true" ruleSet="TexMath" begin="\\\[" end="\\\]"/>
+    <Span color="Number" multiline="true" ruleSet="TexMath" begin="\\\(" end="\\\)"/>
+    <Rule color="Preprocessor">\\(?:documentclass|usepackage|RequirePackage|newcommand|renewcommand|providecommand|newenvironment|renewenvironment|def|let|input|include|includeonly|newtheorem|DeclareMathOperator|setlength|geometry|bibliographystyle|bibliography|addbibresource|graphicspath)(?![A-Za-z@])</Rule>
+    <Rule color="Heading">\\(?:part|chapter|(?:sub){0,2}section|paragraph|subparagraph|title|author|date|maketitle|caption)\*?(?![A-Za-z@])</Rule>
+    <Rule color="Control">\\(?:begin|end)(?![A-Za-z@])</Rule>
+    <Rule color="Type">(?&lt;=\\(?:begin|end)\{)[A-Za-z*]+(?=\})</Rule>
+    <Rule color="ListMarker">\\item(?![A-Za-z@])</Rule>
+    <Rule color="Constant">(?&lt;=\\(?:label|ref|eqref|pageref|autoref|cref|Cref|vref|nameref|cite[a-z]*|nocite)\*?(?:\[[^\]\n]*\])*\{)[^}\n]+</Rule>
+    <Rule color="Keyword">\\[A-Za-z@]+\*?</Rule>
+    <Rule color="Escape">\\[^A-Za-z@\s]</Rule>
+    <Rule color="Operator">&amp;|~</Rule>
+    <Rule color="Punctuation">[{}\[\]]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="TexMath">
+    <Rule color="Keyword">\\[A-Za-z@]+\*?</Rule>
+    <Rule color="Escape">\\[^A-Za-z@]</Rule>
+    <Rule color="Operator">[_^&amp;=+\-*/&lt;&gt;|]</Rule>
+    <Rule color="Punctuation">[{}\[\]()]</Rule>
+    <Span color="Comment" ruleSet="Cmt" begin="(?&lt;!\\)%"/>
+  </RuleSet>
+</SyntaxDefinition>

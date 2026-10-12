@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: R. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="R" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="Property" exampleText="obj.Name"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="DocComment" exampleText="/// summary"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Span color="DocComment" ruleSet="Doc" begin="\#'"/>
+    <Span color="Comment" ruleSet="Cmt" begin="\#"/>
+    <Span color="String" multiline="true" begin="(?&lt;![\w.])[rR]&quot;\(" end="\)&quot;"/>
+    <Span color="String" multiline="true" begin="(?&lt;![\w.])[rR]'\(" end="\)'"/>
+    <Span color="String" multiline="true" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+    <Span color="String" multiline="true" ruleSet="Esc" begin="'" end="'"/>
+    <Span color="Variable" begin="`" end="`"/>
+    <Rule color="Control">(?&lt;![\w.$@])(?:repeat|return|break|while|else|next|for|if)(?![\w.])</Rule>
+    <Rule color="Keyword">(?&lt;![\w.$@])(?:function|in)(?![\w.])</Rule>
+    <Rule color="Constant">(?&lt;![\w.$@])(?:NA_character_|NA_complex_|NA_integer_|NA_real_|FALSE|NULL|TRUE|Inf|NaN|NA)(?![\w.])</Rule>
+    <Rule color="Property">(?&lt;=[$@])[A-Za-z_.][\w.]*</Rule>
+    <Rule color="Property">(?&lt;=[(,]\s*)[A-Za-z_.][\w.]*(?=\s*=(?!=))</Rule>
+    <Rule color="Number">\b0[xX][0-9a-fA-F]+[Li]?\b</Rule>
+    <Rule color="Number">(?&lt;![\w.])(?:\d[\d]*(?:\.(?!\.)[\d]*)?|\.\d[\d]*)(?:[eE][+-]?\d[\d]*)?[Li]?\b</Rule>
+    <Rule color="Function">(?&lt;![\w.])[A-Za-z_.][\w.]*(?=\s*\()</Rule>
+    <Rule color="Operator">&lt;&lt;?-|-&gt;&gt;?|%[^%\s]*%|\|&gt;|:::?|[-+*/^=&lt;&gt;!&amp;|~?$@]+</Rule>
+    <Rule color="Punctuation">[{}()\[\];,]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

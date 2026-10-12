@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Shell. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Shell" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Control" exampleText="if (x) return;"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Attribute" exampleText="[Serializable]"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Rule color="Comment">^\#!.*</Rule>
+    <Span color="Comment" ruleSet="Cmt" begin="(?:^|(?&lt;=[\s;&amp;|(]))\#"/>
+    <Span color="String" begin="'" end="'"/>
+    <Span color="String" ruleSet="Esc" begin="\$'" end="'"/>
+    <Span color="String" multiline="true" ruleSet="ShDq" begin="&quot;" end="&quot;"/>
+    <Span color="Variable" ruleSet="ShBt" begin="`" end="`"/>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(\(</Begin>
+      <End color="Punctuation">\)\)</End>
+    </Span>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Rule color="Variable">\$(?:[A-Za-z_]\w*|[0-9@*#?$!-]|\{[^}\n]*\})</Rule>
+    <Rule color="Variable">\b[A-Za-z_]\w*(?=\+?=)</Rule>
+    <Rule color="Control">(?&lt;![\w.$/-])(?:continue|return|select|break|until|while|case|done|elif|else|esac|exit|then|for|do|fi|if|in)(?![\w.-])</Rule>
+    <Rule color="Keyword">(?&lt;![\w.$/-])(?:
+      function|readonly|declare|typeset|coproc|export|source|alias|local|shift|unset|eval|exec|time|trap|
+      set
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      readarray|complete|builtin|command|compgen|compopt|getopts|history|mapfile|unalias|caller|disown|
+      enable|logout|printf|ulimit|false|pushd|times|umask|bind|dirs|echo|hash|help|jobs|kill|popd|read|
+      test|true|type|wait|let|pwd|bg|cd|fc|fg
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      journalctl|systemctl|terraform|basename|realpath|apt\-get|dirname|kubectl|python3|docker|gunzip|
+      python|screen|umount|whoami|chmod|chown|cmake|egrep|fgrep|mkdir|mount|nohup|patch|rmdir|rsync|sleep|
+      touch|uname|unzip|which|xargs|brew|curl|date|diff|find|free|grep|gzip|head|helm|less|make|more|nano|
+      node|ping|pip3|pnpm|sort|sudo|tail|tmux|uniq|wget|yarn|apt|awk|cat|cut|dnf|env|git|npm|npx|pip|scp|
+      sed|ssh|tar|tee|top|vim|yum|zip|cp|df|du|ip|ln|ls|mv|ps|rm|tr|wc
+    )(?![\w.-])</Rule>
+    <Rule color="Attribute">(?&lt;=\s)--?[A-Za-z][\w-]*</Rule>
+    <Rule color="Function">(?&lt;=\bfunction\s+)[A-Za-z_][\w-]*</Rule>
+    <Rule color="Number">(?&lt;![\w.])\d+(?:\.\d+)?\b</Rule>
+    <Rule color="Operator">&amp;&amp;|\|\||;;|[|&lt;&gt;&amp;!=]+</Rule>
+    <Rule color="Function">\b[A-Za-z_][\w-]*(?=\s*\(\))</Rule>
+    <Rule color="Punctuation">[{}()\[\];]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="ShDq">
+    <Span color="Escape" begin="\\[$`\&quot;\\]" end="(?=.)"/>
+    <Rule color="Variable">\$(?:[A-Za-z_]\w*|[0-9@*#?$!-]|\{[^}\n]*\})</Rule>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Span color="Variable" ruleSet="ShBt" begin="`" end="`"/>
+  </RuleSet>
+
+  <RuleSet name="ShSub">
+    <Span color="String" begin="'" end="'"/>
+    <Span color="String" ruleSet="Esc" begin="\$'" end="'"/>
+    <Span color="String" multiline="true" ruleSet="ShDq" begin="&quot;" end="&quot;"/>
+    <Span color="Variable" ruleSet="ShBt" begin="`" end="`"/>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(\(</Begin>
+      <End color="Punctuation">\)\)</End>
+    </Span>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Rule color="Variable">\$(?:[A-Za-z_]\w*|[0-9@*#?$!-]|\{[^}\n]*\})</Rule>
+    <Rule color="Variable">\b[A-Za-z_]\w*(?=\+?=)</Rule>
+    <Rule color="Control">(?&lt;![\w.$/-])(?:continue|return|select|break|until|while|case|done|elif|else|esac|exit|then|for|do|fi|if|in)(?![\w.-])</Rule>
+    <Rule color="Keyword">(?&lt;![\w.$/-])(?:
+      function|readonly|declare|typeset|coproc|export|source|alias|local|shift|unset|eval|exec|time|trap|
+      set
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      readarray|complete|builtin|command|compgen|compopt|getopts|history|mapfile|unalias|caller|disown|
+      enable|logout|printf|ulimit|false|pushd|times|umask|bind|dirs|echo|hash|help|jobs|kill|popd|read|
+      test|true|type|wait|let|pwd|bg|cd|fc|fg
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      journalctl|systemctl|terraform|basename|realpath|apt\-get|dirname|kubectl|python3|docker|gunzip|
+      python|screen|umount|whoami|chmod|chown|cmake|egrep|fgrep|mkdir|mount|nohup|patch|rmdir|rsync|sleep|
+      touch|uname|unzip|which|xargs|brew|curl|date|diff|find|free|grep|gzip|head|helm|less|make|more|nano|
+      node|ping|pip3|pnpm|sort|sudo|tail|tmux|uniq|wget|yarn|apt|awk|cat|cut|dnf|env|git|npm|npx|pip|scp|
+      sed|ssh|tar|tee|top|vim|yum|zip|cp|df|du|ip|ln|ls|mv|ps|rm|tr|wc
+    )(?![\w.-])</Rule>
+    <Rule color="Attribute">(?&lt;=\s)--?[A-Za-z][\w-]*</Rule>
+    <Rule color="Function">(?&lt;=\bfunction\s+)[A-Za-z_][\w-]*</Rule>
+    <Rule color="Number">(?&lt;![\w.])\d+(?:\.\d+)?\b</Rule>
+    <Rule color="Operator">&amp;&amp;|\|\||;;|[|&lt;&gt;&amp;!=]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="ShBt">
+    <Span color="String" begin="'" end="'"/>
+    <Span color="String" ruleSet="Esc" begin="\$'" end="'"/>
+    <Span color="String" multiline="true" ruleSet="ShDq" begin="&quot;" end="&quot;"/>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(\(</Begin>
+      <End color="Punctuation">\)\)</End>
+    </Span>
+    <Span color="Variable" ruleSet="ShSub">
+      <Begin color="Punctuation">\$\(</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Rule color="Variable">\$(?:[A-Za-z_]\w*|[0-9@*#?$!-]|\{[^}\n]*\})</Rule>
+    <Rule color="Variable">\b[A-Za-z_]\w*(?=\+?=)</Rule>
+    <Rule color="Control">(?&lt;![\w.$/-])(?:continue|return|select|break|until|while|case|done|elif|else|esac|exit|then|for|do|fi|if|in)(?![\w.-])</Rule>
+    <Rule color="Keyword">(?&lt;![\w.$/-])(?:
+      function|readonly|declare|typeset|coproc|export|source|alias|local|shift|unset|eval|exec|time|trap|
+      set
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      readarray|complete|builtin|command|compgen|compopt|getopts|history|mapfile|unalias|caller|disown|
+      enable|logout|printf|ulimit|false|pushd|times|umask|bind|dirs|echo|hash|help|jobs|kill|popd|read|
+      test|true|type|wait|let|pwd|bg|cd|fc|fg
+    )(?![\w.-])</Rule>
+    <Rule color="Function">(?&lt;![\w.$/-])(?:
+      journalctl|systemctl|terraform|basename|realpath|apt\-get|dirname|kubectl|python3|docker|gunzip|
+      python|screen|umount|whoami|chmod|chown|cmake|egrep|fgrep|mkdir|mount|nohup|patch|rmdir|rsync|sleep|
+      touch|uname|unzip|which|xargs|brew|curl|date|diff|find|free|grep|gzip|head|helm|less|make|more|nano|
+      node|ping|pip3|pnpm|sort|sudo|tail|tmux|uniq|wget|yarn|apt|awk|cat|cut|dnf|env|git|npm|npx|pip|scp|
+      sed|ssh|tar|tee|top|vim|yum|zip|cp|df|du|ip|ln|ls|mv|ps|rm|tr|wc
+    )(?![\w.-])</Rule>
+    <Rule color="Attribute">(?&lt;=\s)--?[A-Za-z][\w-]*</Rule>
+    <Rule color="Function">(?&lt;=\bfunction\s+)[A-Za-z_][\w-]*</Rule>
+    <Rule color="Number">(?&lt;![\w.])\d+(?:\.\d+)?\b</Rule>
+    <Rule color="Operator">&amp;&amp;|\|\||;;|[|&lt;&gt;&amp;!=]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

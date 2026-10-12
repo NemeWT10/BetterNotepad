@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PDF engine library: PDFium (render, text, search), printing, PDF -> DOCX. TargetFramework etc. come from Directory.Build.props. -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>BetterNotepad.Pdf</AssemblyName>
+    <RootNamespace>BetterNotepad.Pdf</RootNamespace>
+    <NoWarn>$(NoWarn);CA2255</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- UseWPF removes the System.IO implicit using (name clashes with WPF types); we do not reference those. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bblanchon.PDFium.Win32" Version="157.0.8086" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+</Project>

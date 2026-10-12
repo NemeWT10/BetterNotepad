@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Css. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Css" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Keyword" exampleText="public static void"/>
+  <Color name="Function" exampleText="Foo(bar)"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="Selector" exampleText=".class"/>
+  <Color name="CssProperty" exampleText="color"/>
+
+  <RuleSet>
+    <Import ruleSet="Top"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Top">
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span multiline="true" ruleSet="CssAt">
+      <Begin color="Keyword">@[\w-]+</Begin>
+      <End>(?=[{;])</End>
+    </Span>
+    <Span multiline="true" ruleSet="Top">
+      <Begin color="Punctuation">(?&lt;=@(?:-\w+-)?(?:media|supports|container|layer|document|keyframes|scope|starting-style)\b[^{};]*)\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Span multiline="true" ruleSet="CssProps">
+      <Begin color="Punctuation">(?&lt;!@(?:-\w+-)?(?:media|supports|container|layer|document|keyframes|scope|starting-style)\b[^{};]*)\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Rule color="Selector">\.-?[A-Za-z_][\w-]*</Rule>
+    <Rule color="Selector">\#(?!\{)-?[A-Za-z_][\w-]*</Rule>
+    <Rule color="Selector">%[A-Za-z_][\w-]*|&amp;[\w-]*</Rule>
+    <Span color="Selector" ruleSet="CssAttrSel" begin="\[" end="\]"/>
+    <Rule color="Selector">::?-?[A-Za-z][\w-]*</Rule>
+    <Rule color="Number">(?&lt;![\w.-])\d+(?:\.\d+)?%</Rule>
+    <Rule color="Selector">-?[A-Za-z_][\w-]*|\*</Rule>
+    <Rule color="Operator">[&gt;+~]</Rule>
+    <Rule color="Punctuation">[,;()]</Rule>
+  </RuleSet>
+
+  <RuleSet name="CssProps">
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span multiline="true" ruleSet="CssProps">
+      <Begin color="Punctuation">\{</Begin>
+      <End color="Punctuation">\}</End>
+    </Span>
+    <Span multiline="true" ruleSet="CssValue">
+      <Begin color="Variable">--[\w-]+(?=\s*:)</Begin>
+      <End color="Punctuation">;|(?=\})</End>
+    </Span>
+    <Span multiline="true" ruleSet="CssValue">
+      <Begin color="CssProperty">(?&lt;![\w-])-?[A-Za-z][\w-]*(?=\s*:(?!:))</Begin>
+      <End color="Punctuation">;|(?=\})</End>
+    </Span>
+    <Span multiline="true" ruleSet="CssAt">
+      <Begin color="Keyword">@[\w-]+</Begin>
+      <End>(?=[{;])</End>
+    </Span>
+    <Rule color="Selector">\.-?[A-Za-z_][\w-]*</Rule>
+    <Rule color="Selector">\#(?!\{)-?[A-Za-z_][\w-]*</Rule>
+    <Rule color="Selector">%[A-Za-z_][\w-]*|&amp;[\w-]*</Rule>
+    <Span color="Selector" ruleSet="CssAttrSel" begin="\[" end="\]"/>
+    <Rule color="Selector">::?-?[A-Za-z][\w-]*</Rule>
+    <Rule color="Number">(?&lt;![\w.-])\d+(?:\.\d+)?%</Rule>
+    <Rule color="Selector">-?[A-Za-z_][\w-]*|\*</Rule>
+    <Rule color="Operator">[&gt;+~]</Rule>
+    <Rule color="Punctuation">[,;()]</Rule>
+  </RuleSet>
+
+  <RuleSet name="CssValue">
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span color="String" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+    <Span color="String" ruleSet="Esc" begin="'" end="'"/>
+    <Rule color="Number">\#[0-9A-Fa-f]{3,8}\b</Rule>
+    <Rule color="Number">(?&lt;![\w.#$@-])[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?(?:%|[A-Za-z]+)?</Rule>
+    <Rule color="Keyword">!\s*(?i:important|default|global)\b</Rule>
+    <Rule color="Variable">--[\w-]+|\$[\w-]+|(?&lt;![\w])@[\w-]+</Rule>
+    <Span color="String">
+      <Begin color="Function">\burl\((?![\s\"'])</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Rule color="Function">-?[A-Za-z_][\w-]*(?=\()</Rule>
+    <Rule color="Constant">-?[A-Za-z_][\w-]*</Rule>
+    <Rule color="Operator">[+*/%=&lt;&gt;~]+|(?&lt;=\s)-(?=\s)</Rule>
+    <Rule color="Punctuation">[:,()\[\]]</Rule>
+  </RuleSet>
+
+  <RuleSet name="CssAttrSel">
+    <Span color="String" begin="&quot;" end="&quot;"/>
+    <Span color="String" begin="'" end="'"/>
+  </RuleSet>
+
+  <RuleSet name="CssAt">
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span color="String" begin="&quot;" end="&quot;"/>
+    <Span color="String" begin="'" end="'"/>
+    <Span color="String">
+      <Begin color="Function">\burl\((?![\s\"'])</Begin>
+      <End color="Punctuation">\)</End>
+    </Span>
+    <Rule color="Function">[A-Za-z_-][\w-]*(?=\()</Rule>
+    <Rule color="CssProperty">(?&lt;=\(\s*)[A-Za-z-]+(?=\s*:)</Rule>
+    <Rule color="Keyword">\b(?i:and|or|not|only|from|to|through)\b</Rule>
+    <Rule color="Constant">\b(?i:screen|print|all|speech|portrait|landscape|dark|light)\b</Rule>
+    <Rule color="Number">(?&lt;![\w.#$@-])[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?(?:%|[A-Za-z]+)?</Rule>
+    <Rule color="Variable">--[\w-]+</Rule>
+    <Rule color="Selector">[A-Za-z_][\w-]*</Rule>
+    <Rule color="Punctuation">[:,()]</Rule>
+    <Rule color="Operator">[&lt;&gt;=]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

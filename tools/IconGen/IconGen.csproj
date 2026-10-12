@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Draws the application icon with WPF and writes src\BetterNotepad\Assets\app.ico (PNG frames). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>IconGen</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Read-only virtualized hex view control. No UI strings: every label is passed in by the host. -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Hex</RootNamespace>
+    <AssemblyName>BetterNotepad.Hex</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BetterNotepad.Tabular.Sample" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Json. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Json" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="Key" exampleText="name:"/>
+
+  <RuleSet>
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span color="Comment" ruleSet="Cmt" begin="//"/>
+    <Rule color="Key">(?&lt;=(?:^|[:\[,{])\s*)"(?:[^"\\\n]|\\.)*"(?=\s*:)</Rule>
+    <Rule color="Key">(?&lt;=(?:^|[:\[,{])\s*)'(?:[^'\\\n]|\\.)*'(?=\s*:)</Rule>
+    <Span color="String" ruleSet="Esc" begin="(?&lt;=(?:^|[:\[,{])\s*)&quot;(?!(?:[^&quot;\\\n]|\\.)*&quot;\s*:)" end="&quot;"/>
+    <Span color="String" ruleSet="Esc" begin="(?&lt;=(?:^|[:\[,{])\s*)'(?!(?:[^'\\\n]|\\.)*'\s*:)" end="'"/>
+    <Rule color="Key">(?&lt;=[{,]\s*)[A-Za-z_$][\w$]*(?=\s*:)</Rule>
+    <Rule color="Constant">(?&lt;![\w.])(?:undefined|Infinity|false|null|true|NaN)\b</Rule>
+    <Rule color="Number">(?&lt;![\w.])[-+]?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\b</Rule>
+    <Rule color="Punctuation">[{}\[\],:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|u\{[0-9A-Fa-f]+\}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

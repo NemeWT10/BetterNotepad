@@ -1,0 +1,311 @@
+##### Xml
+##E <?xml => Preprocessor
+##E version => AttrName
+##E "1.0" => AttrValue
+##E DOCTYPE => Preprocessor
+##E a comment => Comment
+##E <root => Tag
+##E xmlns:x => AttrName
+##E '7' => AttrValue
+##E <x:item => Tag
+##E name => AttrName
+##E &amp; => Entity
+##E &lt; => Entity
+##E &#169; => Entity
+##E raw <data> => String
+##E <empty => Tag
+##E /> => Tag
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE note SYSTEM "note.dtd">
+<!-- a comment -->
+<root xmlns:x="urn:x" id='7'>
+  <x:item name="a &amp; b" count="3">text &lt; more &#169;</x:item>
+  <![CDATA[ raw <data> ]]>
+  <empty/>
+</root>
+
+##### Html
+##E DOCTYPE => Preprocessor
+##E <html => Tag
+##E lang => AttrName
+##E "en" => AttrValue
+##E <head => Tag
+##E charset => AttrName
+##E utf-8 => AttrValue
+##E <style => Tag
+##E .box => Selector
+##E :hover => Selector
+##E color => CssProperty
+##E #ff8800 => Number
+##E margin => CssProperty
+##E auto => Constant
+##E </style> => Tag
+##E <script ~1 => Tag
+##E src => AttrName
+##E "app.js" => AttrValue
+##E defer => AttrName
+##E <body => Tag
+##E class => AttrName
+##E data-id => AttrName
+##E '5' => AttrValue
+##E onclick => AttrName
+##E comment => Comment
+##E &amp; => Entity
+##E &copy; => Entity
+##E <script ~2 => Tag
+##E const => Keyword
+##E 42 => Number
+##E // js => Comment
+##E console => Type
+##E log => Function
+##E hi ~2 => String
+##E <input => Tag
+##E disabled => AttrName
+##E "v" => AttrValue
+##E /> => Tag
+##E #ref => AttrName
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset=utf-8>
+  <style>
+    .box > a:hover { color: #ff8800; margin: 0 auto; }
+  </style>
+  <script src="app.js" defer></script>
+</head>
+<body class="main dark" data-id='5' onclick="go()">
+  <!-- comment -->
+  <p>Fish &amp; chips &copy; 2026</p>
+  <script type="module">
+    const x = 42; // js
+    console.log(`hi ${x}`);
+  </script>
+  <input disabled value="v" #ref />
+</body>
+</html>
+
+##### Css
+##E @charset => Keyword
+##E "UTF-8" => String
+##E @import => Keyword
+##E url ~1 => Function
+##E "base.css" => String
+##E screen => Constant
+##E :root => Selector
+##E --main-color ~1 => Variable
+##E #333 => Number
+##E comment => Comment
+##E .btn => Selector
+##E .link => Selector
+##E :not => Selector
+##E ::before => Selector
+##E #id => Selector
+##E "text" => String
+##E li => Selector
+##E color ~2 => CssProperty
+##E var => Function
+##E --main-color ~2 => Variable
+##E !important => Keyword
+##E margin => CssProperty
+##E -0.5em => Number
+##E auto => Constant
+##E 12px => Number
+##E font-family => CssProperty
+##E "Helvetica Neue" => String
+##E Arial => Constant
+##E url ~2 => Function
+##E no-repeat => Constant
+##E linear-gradient => Function
+##E rgba => Function
+##E .5 ~1 => Number
+##E 50% => Number
+##E transition => CssProperty
+##E ease-in-out => Constant
+##E -webkit-transform => CssProperty
+##E -50% => Number
+##E @media => Keyword
+##E min-width => CssProperty
+##E and => Keyword
+##E 600px => Number
+##E .grid => Selector
+##E display => CssProperty
+##E grid ~2 => Constant
+##E repeat ~2 => Function
+##E 1fr => Number
+##E @keyframes => Keyword
+##E spin => Selector
+##E rotate => Function
+##E 360deg => Number
+@charset "UTF-8";
+@import url("base.css") screen;
+:root { --main-color: #333; --gap: 4px; }
+/* comment */
+.btn, a.link:not(.x)::before, #id[type="text"] > li + p {
+  color: var(--main-color) !important;
+  margin: -0.5em auto 0 12px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: url(img/a.png) no-repeat, linear-gradient(to right, rgba(0, 0, 0, .5) 50%, #fff);
+  transition: opacity .3s ease-in-out;
+  -webkit-transform: translate(-50%, 10%);
+}
+@media (min-width: 600px) and (max-width: 1200px) {
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+##### Scss
+##E @use => Keyword
+##E "sass:math" => String
+##E $primary ~1 => Variable
+##E #3498db => Number
+##E $map => Variable
+##E @mixin => Keyword
+##E center ~1 => Function
+##E $w ~1 => Variable
+##E width => CssProperty
+##E &:hover => Selector
+##E color => CssProperty
+##E darken => Function
+##E 10% => Number
+##E .card => Selector
+##E line comment => Comment
+##E @include => Keyword
+##E .title => Selector
+##E font => CssProperty
+##E #{ => Punctuation
+##E &-large => Selector
+##E margin => CssProperty
+##E @if => Keyword
+##E  and  => Keyword
+##E not => Keyword
+##E @else => Keyword
+##E red => Constant
+##E %placeholder => Selector
+##E @each => Keyword
+##E  in  => Keyword
+##E .icon- => Selector
+@use "sass:math";
+$primary: #3498db;
+$map: (key: 1px, other: 2px);
+@mixin center($w: 10px) {
+  width: $w;
+  &:hover { color: darken($primary, 10%); }
+}
+.card {
+  // line comment
+  @include center(20px);
+  .title { font: #{$size}px/1.5 $font; &-large { margin: math.div(10, 2) auto; } }
+  @if $a == 1 and not $b { color: red; } @else { color: blue; }
+}
+%placeholder { color: red }
+@each $name, $glyph in $icons { .icon-#{$name}:before { content: $glyph; } }
+
+##### Json
+##E // jsonc comment => Comment
+##E "name" => Key
+##E "demo" => String
+##E "version" => Key
+##E 1.5e3 => Number
+##E "tags" => Key
+##E "a" ~1 => String
+##E \n => Escape
+##E \/ => Escape
+##E "nested" => Key
+##E "ok" => Key
+##E true => Constant
+##E null => Constant
+##E -42 => Number
+##E "k e y" => Key
+##E "x" => String
+{
+  // jsonc comment
+  "name": "demo",
+  "version": 1.5e3,
+  "tags": ["a", "b\n\/c"],
+  "nested": { "ok": true, "none": null, "n": -42 },
+  "k e y": "x"
+}
+
+##### Php
+##E DOCTYPE => Preprocessor
+##E <html => Tag
+##E <?php => Preprocessor
+##E declare => Control
+##E namespace => Keyword
+##E App\Models => Type
+##E use => Keyword
+##E Illuminate\Support\Str => Type
+##E Attribute => Attribute
+##E final => Keyword
+##E class => Keyword
+##E User => Type
+##E extends => Keyword
+##E Model => Type
+##E implements => Keyword
+##E JsonSerializable => Type
+##E const => Keyword
+##E MAX ~1 => Constant
+##E private => Keyword
+##E string ~1 => Type
+##E $name => Variable
+##E null => Constant
+##E Greets => DocComment
+##E @param => Directive
+##E function => Keyword
+##E greet => Function
+##E int => Type
+##E $msg => Variable
+##E Hello => String
+##E $who ~2 => Variable
+##E $this => Variable
+##E \t => Escape
+##E \' => Escape
+##E 0x1F => Number
+##E 1_000 => Number
+##E 1.5e3 => Number
+##E // note => Comment
+##E if => Control
+##E empty => Keyword
+##E strtoupper => Function
+##E foreach => Control
+##E  as  => Keyword
+##E => => Operator
+##E echo => Keyword
+##E PHP_EOL => Constant
+##E return => Control
+##E ?? => Operator
+##E self => Keyword
+##E MAX ~2 => Constant
+##E <?= => Preprocessor
+##E $title => Variable
+##E <p => Tag
+##E </body => Tag
+<!DOCTYPE html>
+<html>
+<body>
+<?php
+declare(strict_types=1);
+namespace App\Models;
+
+use Illuminate\Support\Str;
+
+#[Attribute]
+final class User extends Model implements JsonSerializable
+{
+    public const MAX = 10;
+    private ?string $name = null;
+
+    /** Greets. @param string $who */
+    public function greet(string $who, int ...$rest): string
+    {
+        $msg = "Hello $who, {$this->name} \t ${who}";
+        $raw = 'it\'s';
+        $n = 0x1F + 1_000 + 1.5e3; // note
+        if ($n >= 10 && !empty($who)) { return strtoupper($msg); }
+        foreach ($rest as $k => $v) { echo $v, PHP_EOL; }
+        return $this->name ?? self::MAX;
+    }
+}
+?>
+<p><?= $title ?></p>
+</body>

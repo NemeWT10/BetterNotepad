@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Xml. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Xml" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Preprocessor" exampleText="#include"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Tag" exampleText="&lt;div&gt;"/>
+  <Color name="AttrName" exampleText="class"/>
+  <Color name="AttrValue" exampleText="&quot;main&quot;"/>
+  <Color name="Entity" exampleText="&amp;amp;"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet>
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="&lt;!--" end="--&gt;"/>
+    <Span color="String" multiline="true" begin="&lt;!\[CDATA\[" end="\]\]&gt;"/>
+    <Span color="Preprocessor" multiline="true" ruleSet="XmlTag" begin="&lt;\?[\w:.-]*" end="\?&gt;"/>
+    <Span color="Preprocessor" multiline="true" ruleSet="XmlDecl" begin="&lt;!(?:DOCTYPE|ELEMENT|ATTLIST|ENTITY|NOTATION)\b" end="&gt;"/>
+    <Span multiline="true" ruleSet="XmlTag">
+      <Begin color="Tag">&lt;/?[A-Za-z_][\w:.-]*</Begin>
+      <End color="Tag">/?&gt;</End>
+    </Span>
+    <Rule color="Entity">&amp;(?:[A-Za-z][\w.-]*|\#\d+|\#[xX][0-9A-Fa-f]+);</Rule>
+  </RuleSet>
+
+  <RuleSet name="Cmt">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Ent">
+    <Rule color="Entity">&amp;(?:[A-Za-z][\w.-]*|\#\d+|\#[xX][0-9A-Fa-f]+);</Rule>
+  </RuleSet>
+
+  <RuleSet name="XmlTag">
+    <Span color="AttrValue" multiline="true" ruleSet="Ent" begin="&quot;" end="&quot;"/>
+    <Span color="AttrValue" multiline="true" ruleSet="Ent" begin="'" end="'"/>
+    <Rule color="AttrName">[A-Za-z_:@#*\[(][\w:.@#*\-\])]*</Rule>
+    <Rule color="Operator">=</Rule>
+  </RuleSet>
+
+  <RuleSet name="XmlDecl">
+    <Span color="String" begin="&quot;" end="&quot;"/>
+    <Span color="String" begin="'" end="'"/>
+    <Rule color="Entity">%[\w.-]+;</Rule>
+  </RuleSet>
+</SyntaxDefinition>

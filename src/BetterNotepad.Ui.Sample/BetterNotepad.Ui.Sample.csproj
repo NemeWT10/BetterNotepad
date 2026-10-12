@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Render harness for BetterNotepad.Html / .Imaging / .Tabular.Wpf. Run it through tools\HiddenDesktopRunner: its windows live on a
+       private hidden desktop, everything is captured from the app's own visual tree (WebView2: its own CapturePreviewAsync) into
+       tests\output\ui. Never looks at the screen. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Ui.Sample</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BetterNotepad.Html\BetterNotepad.Html.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Imaging\BetterNotepad.Imaging.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Tabular.Wpf\BetterNotepad.Tabular.Wpf.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Metadata engine: view / edit / strip metadata of files, images, PDF, Office; file hashes.
+       No third-party dependencies, no UI. TargetFramework etc. come from Directory.Build.props. -->
+  <PropertyGroup>
+    <AssemblyName>BetterNotepad.Metadata</AssemblyName>
+    <RootNamespace>BetterNotepad.Metadata</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BetterNotepad.Metadata.Sample" />
+    <InternalsVisibleTo Include="BetterNotepad.Tests" />
+  </ItemGroup>
+
+</Project>

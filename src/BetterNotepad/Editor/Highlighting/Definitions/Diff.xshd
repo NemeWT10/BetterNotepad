@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Diff. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Diff" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Key" exampleText="name:"/>
+  <Color name="DiffAdded" exampleText="+ added"/>
+  <Color name="DiffRemoved" exampleText="- removed"/>
+  <Color name="DiffHeader" exampleText="@@ -1 +1 @@"/>
+
+  <RuleSet>
+    <Rule color="DiffHeader">^(?:diff[ ]|index[ ]|new[ ]file[ ]mode|deleted[ ]file[ ]mode|old[ ]mode|new[ ]mode|similarity[ ]index|dissimilarity[ ]index|rename[ ](?:from|to)[ ]|copy[ ](?:from|to)[ ]|Binary[ ]files[ ]|\+\+\+[ ]|---[ ]|\*\*\*[ ]|Index:[ ]|={5,}).*</Rule>
+    <Rule color="DiffHeader">^@@.*?@@|^\d+(?:,\d+)?[acd]\d+(?:,\d+)?$</Rule>
+    <Rule color="Constant">^commit[ ][0-9a-f]{7,40}.*</Rule>
+    <Rule color="Key">^(?:Author|Date|Merge|From|Subject):</Rule>
+    <Rule color="Comment">^\\[ ]No[ ]newline[ ]at[ ]end[ ]of[ ]file</Rule>
+    <Rule color="DiffAdded">^[+&gt;].*</Rule>
+    <Rule color="DiffRemoved">^[-&lt;!].*</Rule>
+  </RuleSet>
+</SyntaxDefinition>

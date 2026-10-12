@@ -1,0 +1,82 @@
+<UserControl x:Class="BetterNotepad.Editor.Find.FindBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:BetterNotepad.Core.Localization"
+             xmlns:c="clr-namespace:BetterNotepad.UI.Controls"
+             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,22,0"
+             Focusable="False">
+    <Border Style="{StaticResource Ov.Panel}" Padding="6" CornerRadius="12">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ToggleButton x:Name="ReplaceToggle" Style="{StaticResource IconButton}" Width="22" Height="28" Margin="0,0,4,0"
+                          ToolTip="{l:Tr find.toggleReplace}" Click="OnToggleReplace">
+                <c:Icon x:Name="ReplaceChevron" Glyph="&#xE76C;" FontSize="10"/>
+            </ToggleButton>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Border Width="250" Height="30" CornerRadius="8" Background="{DynamicResource Brush.BgAlt}"
+                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" Padding="8,0,4,0">
+                    <Grid>
+                        <TextBox x:Name="Query" Style="{StaticResource BareField}" FontSize="13" TextChanged="OnQueryChanged"
+                                 PreviewKeyDown="OnQueryKeyDown"/>
+                        <TextBlock x:Name="Placeholder" Text="{l:Tr find.placeholder}" Foreground="{DynamicResource Brush.TextFaint}"
+                                   VerticalAlignment="Center" IsHitTestVisible="False" FontSize="13"/>
+                    </Grid>
+                </Border>
+                <ToggleButton x:Name="CaseToggle" Style="{StaticResource IconButton}" Width="28" Height="28" Margin="4,0,0,0"
+                              ToolTip="{l:Tr find.matchCase}" Click="OnOptionChanged">
+                    <TextBlock Text="Aa" FontSize="12" FontWeight="SemiBold"/>
+                </ToggleButton>
+                <ToggleButton x:Name="WordToggle" Style="{StaticResource IconButton}" Width="28" Height="28"
+                              ToolTip="{l:Tr find.wholeWord}" Click="OnOptionChanged">
+                    <TextBlock Text="ab" FontSize="12" FontWeight="SemiBold" TextDecorations="Underline"/>
+                </ToggleButton>
+                <ToggleButton x:Name="RegexToggle" Style="{StaticResource IconButton}" Width="28" Height="28"
+                              ToolTip="{l:Tr find.regex}" Click="OnOptionChanged">
+                    <TextBlock Text=".*" FontSize="13" FontWeight="SemiBold"/>
+                </ToggleButton>
+                <ToggleButton x:Name="SelectionToggle" Style="{StaticResource IconButton}" Width="28" Height="28"
+                              ToolTip="{l:Tr find.inSelection}" Click="OnSelectionToggle">
+                    <c:Icon Glyph="&#xE8B3;" FontSize="13"/>
+                </ToggleButton>
+                <TextBlock x:Name="Count" MinWidth="64" Margin="8,0,4,0" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource Brush.PanelTextDim}" TextAlignment="Center"/>
+                <Button Style="{StaticResource IconButton}" Width="28" Height="28" ToolTip="{l:Tr find.previous}" Click="OnPrevious">
+                    <c:Icon Glyph="&#xE74A;" FontSize="12"/>
+                </Button>
+                <Button Style="{StaticResource IconButton}" Width="28" Height="28" ToolTip="{l:Tr find.next}" Click="OnNext">
+                    <c:Icon Glyph="&#xE74B;" FontSize="12"/>
+                </Button>
+                <Button Style="{StaticResource IconButton}" Width="28" Height="28" ToolTip="{l:Tr find.close}" Click="OnClose">
+                    <c:Icon Glyph="&#xE8BB;" FontSize="10"/>
+                </Button>
+            </StackPanel>
+
+            <StackPanel x:Name="ReplaceRow" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,6,0,0" Visibility="Collapsed">
+                <Border Width="250" Height="30" CornerRadius="8" Background="{DynamicResource Brush.BgAlt}"
+                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" Padding="8,0,4,0">
+                    <Grid>
+                        <TextBox x:Name="ReplaceBox" Style="{StaticResource BareField}" FontSize="13" PreviewKeyDown="OnReplaceKeyDown"
+                                 TextChanged="OnReplaceTextChanged"/>
+                        <TextBlock x:Name="ReplacePlaceholder" Text="{l:Tr find.replacePlaceholder}" Foreground="{DynamicResource Brush.TextFaint}"
+                                   VerticalAlignment="Center" IsHitTestVisible="False" FontSize="13"/>
+                    </Grid>
+                </Border>
+                <Button Style="{StaticResource IconButton}" Width="28" Height="28" Margin="4,0,0,0" ToolTip="{l:Tr find.replaceOne}" Click="OnReplaceOne">
+                    <c:Icon Glyph="&#xE8EE;" FontSize="13"/>
+                </Button>
+                <Button Style="{StaticResource IconButton}" Width="28" Height="28" ToolTip="{l:Tr find.replaceAll}" Click="OnReplaceAll">
+                    <c:Icon Glyph="&#xE8EE;" FontSize="13" FontWeight="Bold"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

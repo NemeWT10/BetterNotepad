@@ -1,0 +1,308 @@
+##### C
+##E #include => Preprocessor
+##E <stdio.h> => String
+##E BUFFER_SIZE => Constant
+##E 0x400 => Number
+##E bytes => Comment
+##E typedef => Keyword
+##E struct => Keyword
+##E node_t => Type
+##E Sums => DocComment
+##E @param => Directive
+##E sum => Function
+##E next ~2 => Property
+##E for => Control
+##E NULL => Constant
+##E malloc => Function
+##E allocate => Comment
+##E 0xFF => Number
+##E 1u => Number
+##E 3.14f => Number
+##E Hello => String
+##E \n => Escape
+##E \x41 => Escape
+##E goto => Control
+##E fail ~2 => Label
+##E unsigned => Type
+#include <stdio.h>
+#include "util.h"
+#define BUFFER_SIZE 0x400 /* bytes */
+
+typedef struct node {
+    int value;
+    struct node *next;
+} node_t;
+
+/** Sums the list. @param head first node */
+static int sum(const node_t *head) {
+    int total = 0;
+    for (const node_t *n = head; n != NULL; n = n->next) {
+        total += n->value;
+    }
+    return total;
+}
+
+int main(int argc, char **argv) {
+    char *buf = malloc(BUFFER_SIZE); // allocate
+    unsigned mask = 0xFF | 1u << 3;
+    float ratio = 3.14f;
+    printf("Hello, %s!\n", argv[0]);
+    char c = '\x41';
+    if (!buf) goto fail;
+    free(buf);
+    return 0;
+fail:
+    return 1;
+}
+
+##### Cpp
+##E #pragma => Preprocessor
+##E <vector> => String
+##E namespace => Keyword
+##E app => Type
+##E template => Keyword
+##E typename => Keyword
+##E class => Keyword
+##E Cache ~1 => Type
+##E QObject => Type
+##E Q_OBJECT => Preprocessor
+##E public => Keyword
+##E explicit => Keyword
+##E size_t => Type
+##E nodiscard => Attribute
+##E optional => Type
+##E get => Function
+##E signals => Keyword
+##E QString ~2 => Type
+##E unordered_map => Type
+##E auto => Keyword
+##E "string" => String
+##E \n ~1 => String
+##E 1'000'000ULL => Number
+##E cout => Constant
+##E endl => Constant
+##E try => Control
+##E runtime_error => Type
+##E catch => Control
+##E nullptr => Constant
+##E vector ~2 => Type
+#include <vector>
+#include <QString>
+#pragma once
+
+namespace app::detail {
+
+template <typename T>
+class Cache : public QObject {
+    Q_OBJECT
+public:
+    explicit Cache(size_t capacity = 16) : m_capacity(capacity) {}
+    [[nodiscard]] std::optional<T> get(const std::string &key) const noexcept;
+
+signals:
+    void changed(const QString &name);
+
+private:
+    std::unordered_map<std::string, T> m_items;
+    size_t m_capacity;
+};
+
+} // namespace app::detail
+
+auto main() -> int {
+    std::vector<int> v{1, 2, 3};
+    auto raw = R"(raw "string" \n)";
+    constexpr auto big = 1'000'000ULL;
+    for (const auto &x : v) std::cout << x << std::endl;
+    try { throw std::runtime_error("boom"); } catch (const std::exception &e) { return 1; }
+    return nullptr == nullptr ? 0 : 1;
+}
+
+##### CSharp
+##E using => Keyword
+##E #region => Preprocessor
+##E Represents => DocComment
+##E summary => Tag
+##E Serializable => Attribute
+##E record => Keyword
+##E User ~1 => Type
+##E class => Keyword
+##E where => Keyword
+##E readonly => Keyword
+##E Dictionary => Type
+##E 0x1F => Number
+##E Obsolete => Attribute
+##E "old" => String
+##E async => Keyword
+##E Task ~1 => Type
+##E RunAsync => Function
+##E string => Type
+##E default => Control
+##E var => Keyword
+##E Hello => String
+##E ToUpper => Function
+##E {{ => Escape
+##E }} => Escape
+##E \t => Escape
+##E MaxItems ~2 => Type
+##E C:\temp\ => String
+##E Raw "text" here => String
+##E break => Control
+##E 10_000 => Number
+##E 1.5f => Number
+##E  is  => Keyword
+##E not => Keyword
+##E null ~1 => Constant
+##E Delay => Function
+##E \n ~1 => Escape
+##E Length => Property
+##E get ~1 => Keyword
+using System;
+using System.Collections.Generic;
+
+#region Models
+namespace Demo.App;
+
+/// <summary>Represents a user. See <see cref="Id"/>.</summary>
+[Serializable]
+public sealed record User(int Id, string Name);
+
+public class Service<T> where T : class
+{
+    private readonly Dictionary<string, List<int>> _map = new();
+    public const int MaxItems = 0x1F;
+
+    [Obsolete("old", false)]
+    public async Task<int> RunAsync(string? name, CancellationToken ct = default)
+    {
+        var text = $"Hello {name?.ToUpper()} {{literal}} \t{MaxItems:N2}";
+        var path = @"C:\temp\""quoted""";
+        string raw = """
+            Raw "text" here
+            """;
+        foreach (var kv in _map)
+        {
+            if (kv.Value.Count > 10_000 && name is not null) break;
+        }
+        await Task.Delay(1.5f > 1 ? 100 : 200, ct);
+        char c = '\n';
+        return name?.Length ?? 0;
+    }
+
+    public int Count { get; private set; }
+}
+#endregion
+
+##### Java
+##E package => Keyword
+##E import => Keyword
+##E List => Type
+##E Demo service => DocComment
+##E @param => Directive
+##E @Service => Attribute
+##E class => Keyword
+##E Demo ~2 => Type
+##E implements => Keyword
+##E Runnable => Type
+##E LIMIT => Constant
+##E 1_000 => Number
+##E @Override => Attribute
+##E run ~1 => Function
+##E \n => Escape
+##E \u00e9 => Escape
+##E 0xFFL => Number
+##E 1e-3d => Number
+##E isEmpty => Function
+##E System => Type
+##E out => Property
+##E println => Function
+##E sleep => Function
+##E InterruptedException => Type
+##E throw => Control
+##E new => Keyword
+##E var => Keyword
+##E hello => String
+package com.example.demo;
+
+import java.util.List;
+import static java.lang.Math.max;
+
+/**
+ * Demo service.
+ * @param <T> the item type
+ * @author me
+ */
+@Service
+public class Demo<T extends Comparable<T>> implements Runnable {
+    private static final int LIMIT = 1_000;
+    private final Map<String, List<Integer>> cache = new HashMap<>();
+
+    @Override
+    public void run() {
+        String s = "line\n\u00e9";
+        long big = 0xFFL;
+        double d = 1e-3d;
+        for (int i = 0; i < LIMIT; i++) {
+            if (s.isEmpty() || i % 2 == 0) continue;
+        }
+        System.out.println(s);
+        try { Thread.sleep(10); } catch (InterruptedException e) { throw new RuntimeException(e); }
+        var text = """
+            hello
+            """;
+    }
+}
+
+##### Kotlin
+##E package => Keyword
+##E import => Keyword
+##E Doc comment => DocComment
+##E @Serializable => Attribute
+##E data => Keyword
+##E class => Keyword
+##E val => Keyword
+##E Int => Type
+##E companion => Keyword
+##E const => Keyword
+##E LIMIT => Constant
+##E 0xFF_FF => Number
+##E fun => Keyword
+##E main => Function
+##E listOf => Function
+##E "a" => String
+##E null => Constant
+##E 0L => Number
+##E name ~2 => Property
+##E $u => Variable
+##E \t => Escape
+##E continue => Control
+##E Raw => String
+##E $total ~1 => Variable
+##E when => Control
+##E loop@ => Label
+##E 10 => Number
+##E suspend => Keyword
+package com.example
+
+import kotlin.math.max
+
+/** Doc comment. */
+@Serializable
+data class User(val id: Int, val name: String?) {
+    companion object { const val LIMIT = 0xFF_FF }
+}
+
+fun main(args: Array<String>) {
+    val users = listOf(User(1, "a"), User(2, null))
+    var total = 0L
+    for (u in users) {
+        println("User ${u.name} has id $u.id\t!")
+        if (u.name == null) continue
+    }
+    val raw = """
+        Raw $total text
+    """
+    val r = when (total) { 0L -> "zero" else -> "many" }
+    loop@ for (i in 0..10) { break@loop }
+    suspend fun load(): String = "x"
+}

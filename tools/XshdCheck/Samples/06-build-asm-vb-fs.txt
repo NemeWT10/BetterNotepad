@@ -1,0 +1,452 @@
+##### Dockerfile
+##E syntax=docker/dockerfile:1 => Preprocessor
+##E FROM => Keyword
+##E --platform => Attribute
+##E node:20-alpine => Type
+##E AS => Keyword
+##E ARG => Keyword
+##E VERSION ~1 => Variable
+##E NODE_ENV => Variable
+##E WORKDIR => Keyword
+##E COPY => Keyword
+##E --from => Attribute
+##E RUN => Keyword
+##E npm => Function
+##E && => Operator
+##E # comment => Comment
+##E EXPOSE => Keyword
+##E 8080/tcp => Number
+##E CMD ~1 => Keyword
+##E "node" => String
+##E $PORT => Variable
+##E maintainer => Variable
+##E "me" => String
+##E ${VERSION} => Variable
+##E HEALTHCHECK => Keyword
+##E --interval => Attribute
+# syntax=docker/dockerfile:1
+FROM --platform=linux/amd64 node:20-alpine AS build
+ARG VERSION=1.0
+ENV NODE_ENV=production PORT=8080
+WORKDIR /app
+COPY --from=builder --chown=app:app package*.json ./
+RUN npm ci && \
+    npm run build   # comment
+EXPOSE 8080/tcp
+CMD ["node", "server.js", "--port=$PORT"]
+LABEL maintainer="me" version="${VERSION}"
+HEALTHCHECK --interval=30s CMD curl -f http://localhost/ || exit 1
+
+##### Makefile
+##E # build file => Comment
+##E CC ~1 => Variable
+##E := => Operator
+##E CFLAGS => Variable
+##E ?= => Operator
+##E OBJS => Variable
+##E patsubst => Function
+##E wildcard => Function
+##E .PHONY => Directive
+##E app ~2 => Label
+##E $(CC) => Variable
+##E $@ => Variable
+##E && => Operator
+##E echo ~1 => Function
+##E "built" => String
+##E # comment => Comment
+##E %.o ~2 => Label
+##E ifeq => Control
+##E EXT => Variable
+##E endif => Control
+##E include => Keyword
+# build file
+CC := gcc
+CFLAGS ?= -O2 -Wall
+OBJS = $(patsubst %.c,%.o,$(wildcard src/*.c))
+.PHONY: all clean
+
+all: app
+
+app: $(OBJS)
+<TAB>$(CC) $(CFLAGS) -o $@ $^ && echo "built"
+<TAB>@echo done # comment
+
+%.o: %.c
+<TAB>$(CC) -c $< -o $@
+
+ifeq ($(OS),Windows_NT)
+  EXT = .exe
+endif
+include config.mk
+
+##### CMake
+##E cmake_minimum_required => Function
+##E VERSION ~1 => Keyword
+##E 3.20 => Number
+##E project => Function
+##E LANGUAGES => Keyword
+##E CXX => Constant
+##E trailing => Comment
+##E block => Comment
+##E set ~1 => Function
+##E CMAKE_CXX_STANDARD => Constant
+##E CACHE => Keyword
+##E "std" => String
+##E option => Function
+##E  ON => Constant
+##E add_executable => Function
+##E PRIVATE => Keyword
+##E CMAKE_DL_LIBS => Variable
+##E foo ~2 => Variable
+##E if ~1 => Control
+##E WIN32 => Constant
+##E  AND  => Keyword
+##E NOT => Keyword
+##E STATUS => Keyword
+##E \" => Escape
+##E PROJECT_NAME => Variable
+##E elseif => Control
+##E DEFINED => Keyword
+##E function ~1 => Keyword
+##E REGEX => Keyword
+cmake_minimum_required(VERSION 3.20)
+project(Demo LANGUAGES CXX)  # trailing
+#[[ block
+comment ]]
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "std")
+option(USE_FOO "Use foo" ON)
+add_executable(app main.cpp "src/a b.cpp")
+target_link_libraries(app PRIVATE Qt6::Core ${CMAKE_DL_LIBS} $<TARGET_FILE:foo>)
+if(WIN32 AND NOT USE_FOO)
+  message(STATUS "Windows \"quoted\" ${PROJECT_NAME}")
+elseif(DEFINED ENV{HOME})
+endif()
+function(my_func arg)
+  string(REGEX REPLACE "a+" "b" out "${arg}")
+endfunction()
+
+##### AsmX86
+##E ; NASM => Comment
+##E section ~1 => Directive
+##E .data => Directive
+##E msg ~1 => Label
+##E db => Directive
+##E "Hello, world!" => String
+##E 10 ~1 => Number
+##E len => Constant
+##E equ => Directive
+##E %define => Preprocessor
+##E 0x100 => Number
+##E %macro => Preprocessor
+##E %1 ~1 => Variable
+##E mov ~1 => Instruction
+##E rdi ~1 => Register
+##E global ~1 => Directive
+##E _start ~2 => Label
+##E eax ~1 => Register
+##E sys_write => Comment
+##E lea => Instruction
+##E rsi => Register
+##E byte => Type
+##E rbx => Register
+##E 0FFh => Number
+##E xor => Instruction
+##E vaddps => Instruction
+##E ymm0 => Register
+##E movaps => Instruction
+##E 0b101 => Number
+##E jne => Instruction
+##E .done ~2 => Label
+##E rep ~1 => Instruction
+##E movsb => Instruction
+##E syscall => Instruction
+##E ret ~1 => Instruction
+##E .globl => Directive
+##E pushq => Instruction
+##E %rbp => Register
+##E movl => Instruction
+##E $0x10 => Number
+##E %eax => Register
+##E # comment => Comment
+##E 1f => Label
+##E .386 => Directive
+##E flat => Type
+##E buf ~1 => Label
+##E dup => Directive
+##E PROC => Directive
+##E OFFSET => Type
+##E invoke => Directive
+##E ENDP => Directive
+; NASM
+section .data
+msg     db "Hello, world!", 10, 0
+len     equ $ - msg
+%define BUFSZ 0x100
+%macro PRINT 1
+    mov rdi, %1
+%endmacro
+
+section .text
+global _start
+_start:
+    mov eax, 1          ; sys_write
+    lea rsi, [rel msg]
+    mov byte [rbx+4*rcx+8], 0FFh
+    xor ecx, ecx
+    vaddps ymm0, ymm1, [rdi]
+    movaps xmm0, xmm1
+    cmp eax, 0b101
+    jne .done
+.done:
+    rep movsb
+    syscall
+    ret
+    .globl main
+    .type main, @function
+main:
+    pushq %rbp
+    movl $0x10, %eax
+    movq (%rax,%rbx,4), %rcx   # comment
+    call printf@PLT
+    jmp 1f
+1:  ret
+.386
+.model flat, stdcall
+buf db 64 dup(0)
+.code
+main PROC
+    mov eax, OFFSET buf
+    invoke ExitProcess, 0
+main ENDP
+END main
+
+##### AsmArm
+##E @ ARM32 => Comment
+##E .syntax => Directive
+##E .thumb => Directive
+##E main ~2 => Label
+##E push ~1 => Instruction
+##E r4 ~1 => Register
+##E lr ~1 => Register
+##E ldr ~1 => Instruction
+##E = ~1 => Operator
+##E movs => Instruction
+##E #0x10 => Number
+##E adds => Instruction
+##E cmp => Instruction
+##E bne => Instruction
+##E 1f => Label
+##E ldrb => Instruction
+##E lsl ~1 => Keyword
+##E bl ~1 => Instruction
+##E pc => Register
+##E .asciz => Directive
+##E \n => Escape
+##E ; A64 => Comment
+##E stp => Instruction
+##E x29 => Register
+##E sp ~1 => Register
+##E csel => Instruction
+##E eq ~1 => Constant
+##E v0.4s => Register
+##E b.eq => Instruction
+##E tpidr_el0 => Register
+##E // line comment => Comment
+##E 0xdeadbeef => Number
+@ ARM32
+.syntax unified
+.thumb
+.global main
+.text
+main:
+    push {r4, lr}
+    ldr r0, =msg
+    movs r1, #0x10
+    adds r1, r1, #1
+    cmp r1, #10
+    bne 1f
+    ldrb r2, [r0, #4]!
+    add r3, r1, r2, lsl #2
+    bl printf
+1:  pop {r4, pc}
+msg: .asciz "hi\n"
+    ; A64
+    stp x29, x30, [sp, #-16]!
+    mov x0, #5
+    ldr w1, [x0, x2, lsl #3]
+    csel x0, x1, x2, eq
+    add v0.4s, v1.4s, v2.4s
+    b.eq done
+    ret
+    mrs x0, tpidr_el0
+    // line comment
+    .word 0xdeadbeef
+
+##### AsmAvr
+##E ; AVR blink => Comment
+##E .include => Directive
+##E "m328Pdef.inc" => String
+##E .def => Directive
+##E r16 ~1 => Register
+##E .equ => Directive
+##E PB5 => Register
+##E .org => Directive
+##E 0x0000 => Number
+##E rjmp ~1 => Instruction
+##E reset ~2 => Label
+##E ldi ~1 => Instruction
+##E 0xFF => Number
+##E out ~1 => Instruction
+##E DDRB => Register
+##E high => Function
+##E SPH => Register
+##E sbi => Instruction
+##E PORTB => Register
+##E lds => Instruction
+##E $0100 => Number
+##E X => Register
+##E Z => Register
+##E 'A' => String
+##E loop ~1 => Label
+##E sbis => Instruction
+##E brne => Instruction
+##E reti => Instruction
+##E .db => Directive
+; AVR blink
+.include "m328Pdef.inc"
+.def temp = r16
+.equ LED = PB5
+.org 0x0000
+    rjmp reset
+reset:
+    ldi temp, 0xFF
+    out DDRB, temp
+    ldi r17, high(RAMEND)
+    out SPH, r17
+    sbi PORTB, LED
+    lds r18, $0100
+    ld r0, X+
+    st -Y, r1
+    lpm r2, Z
+    cpi r16, 'A'
+loop:
+    sbis PINB, 0
+    rjmp loop
+    brne loop
+    reti
+.db "text", 0
+
+##### VB
+##E Imports => Keyword
+##E ' comment => Comment
+##E Doc => DocComment
+##E Namespace => Keyword
+##E Serializable => Attribute
+##E Public => Keyword
+##E Class => Keyword
+##E Person => Type
+##E Inherits => Keyword
+##E Base => Type
+##E Private => Keyword
+##E As => Keyword
+##E String => Type
+##E "" => Escape
+##E Const => Keyword
+##E Integer => Type
+##E &HFF => Number
+##E Sub => Keyword
+##E ByVal => Keyword
+##E Optional => Keyword
+##E Dim => Keyword
+##E Hi => String
+##E If => Control
+##E IsNot => Keyword
+##E Nothing => Constant
+##E AndAlso => Keyword
+##E 1.5 => Number
+##E Then => Control
+##E WriteLine => Function
+##E ElseIf => Control
+##E Exit => Control
+##E Each => Control
+##E #1/2/2020# => Number
+##E REM old comment => Comment
+##E #Region => Preprocessor
+Imports System.Text
+' comment
+''' <summary>Doc</summary>
+Namespace Demo
+  <Serializable>
+  Public Class Person
+    Inherits Base
+    Private _name As String = "Bob ""B"""
+    Const Max As Integer = &HFF
+    Public Property Name As String
+    Public Sub Greet(ByVal who As String, Optional n As Integer = 3)
+      Dim s = $"Hi {who}!"
+      If who IsNot Nothing AndAlso n > 1.5 Then
+        Console.WriteLine(s)
+      ElseIf n <= 0 Then : Exit Sub
+      End If
+      For Each c As Char In who : Next
+      Dim d As Date = #1/2/2020#
+      REM old comment
+    End Sub
+  End Class
+End Namespace
+#Region "x"
+#End Region
+
+##### FSharp
+##E module => Keyword
+##E open => Keyword
+##E Doc comment => DocComment
+##E EntryPoint => Attribute
+##E let ~1 => Keyword
+##E main ~1 => Function
+##E add => Function
+##E mutable => Keyword
+##E 0x1F => Number
+##E Hi => String
+##E Length => Property
+##E C:\x => String
+##E tri => String
+##E 'a' => String
+##E block => Comment
+##E |> ~1 => Operator
+##E map => Function
+##E fun => Keyword
+##E sum => Function
+##E printfn => Function
+##E match => Control
+##E with ~1 => Control
+##E when => Control
+##E let! => Keyword
+##E return => Control
+##E None => Constant
+##E #if => Preprocessor
+##E type ~1 => Keyword
+##E Shape => Type
+##E of => Keyword
+##E float => Type
+module Demo.App
+open System
+
+/// Doc comment
+[<EntryPoint>]
+let main argv =
+    let add x y = x + y
+    let mutable count = 0x1F
+    let s = $"Hi {argv.Length}" + @"C:\x" + """tri"""
+    let c = 'a'
+    (* block
+       comment *)
+    xs |> List.map (fun x -> x * 2) |> Seq.sum |> printfn "%d"
+    match Some 3 with
+    | Some n when n > 1 -> async { let! r = fetch () in return r }
+    | None -> failwith "no"
+    #if DEBUG
+    let t: 'a list = []
+    #endif
+    0
+type Shape = Circle of float | Rect of w: float * h: float

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Markdown. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Markdown" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Tag" exampleText="&lt;div&gt;"/>
+  <Color name="Entity" exampleText="&amp;amp;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Heading" exampleText="# Title"/>
+  <Color name="Emphasis" exampleText="*em*"/>
+  <Color name="Strong" exampleText="**bold**"/>
+  <Color name="Link" exampleText="[text](url)"/>
+  <Color name="Code" exampleText="`code`"/>
+  <Color name="Quote" exampleText="&gt; quote"/>
+  <Color name="ListMarker" exampleText="- item"/>
+
+  <RuleSet>
+    <Span color="Comment" multiline="true" begin="&lt;!--" end="--&gt;"/>
+    <Span color="Code" multiline="true" begin="^\s*(?:`{3,}|~{3,})[^\n]*" end="^\s*(?:`{3,}|~{3,})\s*$"/>
+    <Rule color="Heading">^\s{0,3}\#{1,6}(?=\s|$).*</Rule>
+    <Rule color="Heading">^\s{0,3}(?:=+|-{2,})\s*$</Rule>
+    <Rule color="Quote">^\s{0,3}&gt;.*</Rule>
+    <Rule color="ListMarker">^\s*(?:[-*_]\s*){3,}$</Rule>
+    <Rule color="ListMarker">^\s*(?:[-*+]|\d{1,9}[.)])(?=\s)</Rule>
+    <Rule color="ListMarker">(?&lt;=^\s*(?:[-*+]|\d{1,9}[.)])\s+)\[[ xX]\](?=\s|$)</Rule>
+    <Span color="Code" begin="(?&lt;!`)``(?!`)" end="``"/>
+    <Span color="Code" begin="(?&lt;!`)`(?!`)" end="`"/>
+    <Rule color="Escape">\\[\\`*_{}\[\]()#+\-.!|&lt;&gt;~]</Rule>
+    <Rule color="Link">!?\[[^\]\n]*\]\([^)\n]*\)|\[[^\]\n]+\]\[[^\]\n]*\]|\[\^[^\]\n]+\]</Rule>
+    <Rule color="Link">^\s*\[[^\]\n]+\]:\s*\S+.*</Rule>
+    <Rule color="Link">&lt;(?:https?|ftp|mailto):[^&gt;\s]+&gt;|\b(?:https?|ftp)://[^\s&lt;&gt;)\]]+</Rule>
+    <Rule color="Strong">\*\*\*[^*\n]+\*\*\*|\*\*[^*\n]+\*\*|__[^_\n]+__</Rule>
+    <Rule color="Emphasis">(?&lt;![*\w])\*[^*\s](?:[^*\n]*[^*\s])?\*(?!\*)|(?&lt;![_\w])_[^_\s](?:[^_\n]*[^_\s])?_(?![_\w])</Rule>
+    <Rule color="Tag">&lt;/?[A-Za-z][\w:-]*(?:\s[^&lt;&gt;\n]*)?/?&gt;</Rule>
+    <Rule color="Entity">&amp;(?:[A-Za-z][\w]*|\#\d+|\#[xX][0-9A-Fa-f]+);</Rule>
+    <Rule color="Punctuation">^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$|(?&lt;!\\)\|</Rule>
+  </RuleSet>
+</SyntaxDefinition>

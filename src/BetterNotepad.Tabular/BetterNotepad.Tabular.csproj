@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CSV / TSV engine: dialect detection, offset-preserving tokenizer, table model, sort / filter views, cell edits.
+       No UI and no Windows dependency. The file text is the source of truth; every cell is an offset range into it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>BetterNotepad.Tabular</RootNamespace>
+    <AssemblyName>BetterNotepad.Tabular</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

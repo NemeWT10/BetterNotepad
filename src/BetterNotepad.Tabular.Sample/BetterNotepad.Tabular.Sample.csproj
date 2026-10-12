@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Test / benchmark harness for BetterNotepad.Tabular and offscreen render harness for BetterNotepad.Hex.
+       No window is ever shown; fixtures and PNGs go to tests\output\tabular and tests\output\hex.
+       Usage: dotnet run -c Release (in this folder) with one of: tests, bench, hex, all. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Tabular.Sample</RootNamespace>
+    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BetterNotepad.Tabular\BetterNotepad.Tabular.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Hex\BetterNotepad.Hex.csproj" />
+  </ItemGroup>
+
+</Project>

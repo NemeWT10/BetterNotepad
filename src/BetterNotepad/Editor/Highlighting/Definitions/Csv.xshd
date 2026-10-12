@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: Csv. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="Csv" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+
+  <RuleSet>
+    <Span color="String" multiline="true" ruleSet="CsvQ" begin="&quot;" end="&quot;(?!&quot;)"/>
+    <Rule color="Number">(?&lt;=^|[,;|\t])[ ]*[-+]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?[ ]*(?=[,;|\t]|$)</Rule>
+    <Rule color="Constant">(?&lt;=^|[,;|\t])[ ]*(?i:true|false|null|nil|none|n/a|nan)[ ]*(?=[,;|\t]|$)</Rule>
+    <Rule color="Punctuation">[,;|\t]</Rule>
+  </RuleSet>
+
+  <RuleSet name="CsvQ">
+    <Span color="Escape" begin="&quot;&quot;" end="(?=.)"/>
+  </RuleSet>
+</SyntaxDefinition>

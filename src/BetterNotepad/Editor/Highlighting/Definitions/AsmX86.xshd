@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BetterNotepad syntax definition: AsmX86. Colors are SyntaxToken names; the active theme paints them. -->
+<SyntaxDefinition name="AsmX86" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Type" exampleText="int string"/>
+  <Color name="Variable" exampleText="$value"/>
+  <Color name="String" exampleText="&quot;text&quot;"/>
+  <Color name="Number" exampleText="0xFF 3.14"/>
+  <Color name="Constant" exampleText="true null"/>
+  <Color name="Comment" exampleText="// comment"/>
+  <Color name="Preprocessor" exampleText="#include"/>
+  <Color name="Operator" exampleText="+ - =&gt;"/>
+  <Color name="Punctuation" exampleText="{ } ( ) ;"/>
+  <Color name="Escape" exampleText="\n \t"/>
+  <Color name="Register" exampleText="eax rbx"/>
+  <Color name="Instruction" exampleText="mov add"/>
+  <Color name="Directive" exampleText=".text"/>
+  <Color name="Label" exampleText="loop:"/>
+  <Color name="Link" exampleText="[text](url)"/>
+
+  <RuleSet ignoreCase="true">
+    <Span color="Comment" ruleSet="Cmt" begin=";"/>
+    <Span color="Comment" multiline="true" ruleSet="Cmt" begin="/\*" end="\*/"/>
+    <Span color="Comment" ruleSet="Cmt" begin="//"/>
+    <Rule color="Preprocessor">^\s*\#\s*(?:include|define|undef|ifdef|ifndef|if|elif|else|endif|error|warning|pragma|line)\b</Rule>
+    <Span color="Comment" ruleSet="Cmt" begin="(?:^|(?&lt;=\s))\#(?!\s*(?:include|define|undef|ifdef|ifndef|if|elif|else|endif|error|warning|pragma|line)\b)"/>
+    <Rule color="Preprocessor">^\s*%\s*(?i:define|xdefine|undef|macro|endmacro|rotate|if|ifdef|ifndef|ifidn|ifnidn|ifnum|ifstr|ifctx|elif|elifdef|else|endif|include|assign|rep|endrep|line|error|warning|pragma|strlen|substr|clear|push|pop|unmacro|imacro|idefine|iassign|exitrep|defstr|deftok|depend|pathsearch|use|arg|local|stacksize)\b</Rule>
+    <Rule color="Variable">%(?:\d+|\$\w+|%\w+|\{[^}\n]*\})</Rule>
+    <Span color="String" ruleSet="Esc" begin="`" end="`"/>
+    <Span color="String" ruleSet="Esc" begin="&quot;" end="&quot;"/>
+    <Span color="String" ruleSet="Esc" begin="'" end="'"/>
+    <Rule color="Label">^\s*[A-Za-z_.$@?][\w.$@?]*(?=:)|^\s*\d+(?=:)</Rule>
+    <Rule color="Constant">^\s*[A-Za-z_.$@?][\w.$@?]*(?=\s+(?i:equ|textequ)\b|\s*=(?!=))</Rule>
+    <Rule color="Label">^\s*[A-Za-z_.$@?][\w.$@?]*(?=\s+(?i:db|dw|dd|dq|dt|do|dy|dz|resb|resw|resd|resq|rest|reso|resy|resz|times|proc|endp|macro|struc|segment|ends|struct|union|label)\b)</Rule>
+    <Rule color="Label">@[@FfBb]\b|(?&lt;=\b(?i:j\w+|loop\w*|call)\s+)\d+[fb]\b</Rule>
+    <Rule color="Register">(?&lt;![\w.$@%])%?(?:eflags|rflags|flags|gdtr|idtr|ldtr|bpl|cr0|cr2|cr3|cr4|cr8|dil|eax|ebp|ebx|ecx|edi|edx|eip|esi|esp|rax|rbp|rbx|rcx|rdi|rdx|rip|rsi|rsp|sil|spl|ah|al|ax|bh|bl|bp|bx|ch|cl|cs|cx|dh|di|dl|ds|dx|es|fs|gs|ip|si|sp|ss|st|tr|r(?:8|9|1[0-5])[dwb]?|[xyz]mm(?:[12]?\d|3[01])|k[0-7]|mm[0-7]|st[0-7]|st\([0-7]\)|[cd]r(?:1[0-5]|\d)|tr[0-7]|bnd[0-3]|tmm[0-7])(?![\w$@])</Rule>
+    <Rule color="Directive">^\s*\.(?:[A-Za-z_]\w*|\d+\w*)|(?&lt;=^\s*[A-Za-z_.$@?][\w.$@?]*:\s*)\.[A-Za-z_]\w*|(?&lt;=\b(?i:section|segment)\s+)\.[A-Za-z_]\w*</Rule>
+    <Rule color="Directive">(?i:(?&lt;![\w.$@%])(?:
+      includelib|externdef|absolute|endstruc|default|include|section|segment|textequ|typedef|alignb|
+      assume|common|elseif|extern|global|ifndef|incbin|invoke|istruc|public|record|repeat|struct|align|
+      endif|extrn|float|globl|ifdef|label|local|macro|proto|struc|times|union|until|use16|use32|use64|
+      while|bits|else|endm|endp|ends|endw|iend|proc|resb|resd|reso|resq|rest|resw|resy|resz|uses|cpu|dup|
+      end|equ|org|db|dd|do|dq|dt|dw|dy|dz|if
+    )(?![\w$@]))</Rule>
+    <Rule color="Type">(?i:(?&lt;![\w.$@%])(?:
+      xmmword|ymmword|zmmword|offset|real10|sdword|sqword|dword|oword|qword|real4|real8|sbyte|short|sword|
+      tbyte|tword|byte|flat|near|word|far|ptr
+    )(?![\w$@]))</Rule>
+    <Rule color="Instruction">(?i:(?&lt;![\w.$@%])(?:aeskeygenassist|prefetchnta|sha256rnds2|aesdeclast|aesenclast|cmpxchg16b|prefetcht0|prefetcht1|prefetcht2|punpcklqdq|vzeroupper|cmpxchg8b|cvttsd2si|cvttss2si|extractps|pclmulqdq|punpckhbw|punpcklbw|punpckldq|punpcklwd|sha1rnds4|blendvps|cvtdq2ps|cvtpd2ps|cvtps2dq|cvtsd2ss|cvtsi2sd|cvtsi2ss|cvtss2sd|insertps|movmskps|pmovmskb|pmovsxbw|pmovzxbw|prefetch|sysenter|unpckhpd|unpckhps|unpcklpd|unpcklps|vzeroall|blendps|clflush|cmpxchg|movhlps|movlhps|palignr|pblendw|pcmpeqb|pcmpeqd|pcmpeqw|pcmpgtb|pcmpgtd|pcmpgtw|pmaddwd|pmuludq|pshufhw|pshuflw|roundps|roundsd|roundss|rsqrtps|syscall|sysexit|ucomisd|ucomiss|aesdec|aesenc|andnps|blsmsk|cmovae|cmovbe|cmovge|cmovle|cmovnc|cmovne|cmovno|cmovnp|cmovns|cmovnz|comisd|comiss|fcomip|fninit|fnstcw|fnstsw|fpatan|haddps|hsubps|lfence|loopne|loopnz|mfence|movabs|movapd|movaps|movdqa|movdqu|movhps|movlps|movsxd|movupd|movups|pextrb|pextrd|pextrq|pextrw|pinsrb|pinsrd|pinsrq|pinsrw|pmaxsd|pmaxub|pminsd|pminub|pmulld|pmullw|popcnt|psadbw|pshufb|pshufd|pushad|pushfd|pushfq|rdrand|rdseed|rdtscp|sfence|shufpd|shufps|sqrtpd|sqrtps|sqrtsd|sqrtss|sysret|xgetbv|addpd|addps|addsd|addss|andpd|andps|bextr|bswap|cmova|cmovb|cmovc|cmove|cmovg|cmovl|cmovo|cmovp|cmovs|cmovz|cmpps|cmpsb|cmpsd|cmpsq|cmpss|cmpsw|cpuid|crc32|divpd|divps|divsd|divss|enter|f2xm1|faddp|fcomi|fcomp|fdivp|finit|fistp|fldcw|fldpi|fmulp|fptan|fsqrt|fsubp|fwait|fyl2x|iretd|iretq|jecxz|jrcxz|leave|lodsb|lodsd|lodsq|lodsw|loope|loopz|lzcnt|maxps|maxss|minps|minss|movsb|movsd|movsq|movss|movsw|movsx|movzx|mulpd|mulps|mulsd|mulss|paddb|paddd|paddq|paddw|pandn|pause|pavgb|popad|popfd|popfq|pslld|psllq|psllw|psrad|psraw|psrld|psrlq|psrlw|psubb|psubd|psubq|psubw|ptest|pusha|pushf|rcpps|rdmsr|rdtsc|repne|repnz|scasb|scasd|scasq|scasw|setae|setbe|setge|setle|setnc|setne|setno|setnp|setns|setnz|stosb|stosd|stosq|stosw|subpd|subps|subsd|subss|tzcnt|wrmsr|xlatb|xorpd|xorps|andn|blsi|blsr|call|cdqe|cmps|cwde|dpps|emms|fabs|fadd|fchs|fcom|fcos|fdiv|fild|fist|fld1|fldz|fmul|fsin|fstp|fsub|fxch|idiv|imul|int3|into|iret|jcxz|lahf|lock|lods|loop|movd|movq|movs|mulx|orps|outs|pand|pdep|pext|popa|popf|push|pxor|repe|repz|retf|retn|rorx|sahf|sarx|scas|seta|setb|setc|sete|setg|setl|seto|setp|sets|setz|shld|shlx|shrd|shrx|stos|test|xadd|xchg|xlat|adc|add|and|bsf|bsr|btc|btr|bts|cbw|cdq|clc|cld|cli|cmc|cmp|cqo|cwd|dec|div|fld|fst|hlt|inc|ins|int|jae|jbe|jge|jle|jmp|jnc|jne|jno|jnp|jns|jnz|lea|mov|mul|neg|nop|not|out|pop|por|rcl|rcr|rep|ret|rol|ror|sal|sar|sbb|shl|shr|stc|std|sti|sub|ud2|xor|bt|in|ja|jb|jc|je|jg|jl|jo|jp|js|jz|or|v(?:p?(?:add|sub|mul|div|and|andn|or|xor|min|max|abs|sqrt|mov|cmp|shuf|perm|blend|broadcast|extract|insert|unpck|cvt|fmadd|fmsub|fnmadd|fnmsub|gather|scatter|round|test|hadd|hsub|sll|srl|sra|align|pack|ins|ext)\w*))(?![\w$@]))</Rule>
+    <Rule color="Instruction">(?i:(?&lt;![\w.$@%])(?:(?:mov|add|sub|and|or|xor|cmp|test|push|pop|lea|inc|dec|neg|not|shl|shr|sar|sal|rol|ror|imul|mul|idiv|div|adc|sbb|xchg|bt|bts|btr|btc|call|ret|jmp|stos|lods|scas|cmps|movs)[bwlq]|mov[sz][bw][wlq]|movslq|cltq|cqto|cltd|cwtl|cbtw|cwtd)(?![\w$@]))</Rule>
+    <Rule color="Instruction">(?i:(?&lt;![\w.$@%])(?:(?:cmov|set|j)(?:n?(?:a|ae|b|be|c|e|g|ge|l|le|o|p|s|z)|pe|po|na|nae|nb|nbe|nc|ne|ng|nge|nl|nle|no|np|ns|nz)|(?:add|sub|mul|div|min|max|sqrt|cmp|and|andn|or|xor|unpckl|unpckh|shuf|rcp|rsqrt|round)(?:ps|pd|ss|sd)|cvtt?\w+|[lq]?(?:ret|jmp|call)[wlq]?)(?![\w$@]))</Rule>
+    <Rule color="Number">\$-?(?:0[xX][0-9a-fA-F]+|\d+)</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])[0-9][0-9A-Fa-f]*[hH]\b</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])0[xX][0-9a-fA-F_]+\b</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])0[bB][01_]+\b</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])[01]+[bByY]\b</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])[0-7]+[oOqQ]\b</Rule>
+    <Rule color="Number">(?&lt;![\w.$@])(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?\b</Rule>
+    <Rule color="Operator">[-+*/%&lt;&gt;=!&amp;|^~]+</Rule>
+    <Rule color="Punctuation">[\[\](){},:]</Rule>
+  </RuleSet>
+
+  <RuleSet name="Esc" ignoreCase="true">
+    <Span color="Escape" begin="\\(?:x[0-9A-Fa-f]{1,2}|[0-7]{1,3}|.)" end="(?=.)"/>
+  </RuleSet>
+
+  <RuleSet name="Cmt" ignoreCase="true">
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+
+  <RuleSet name="Doc" ignoreCase="true">
+    <Rule color="Directive">(?&lt;![\w])[@\\][A-Za-z]+</Rule>
+    <Rule color="Link">\b(?:https?|ftp|file)://[^\s&lt;&gt;\"'`)\]]+</Rule>
+  </RuleSet>
+</SyntaxDefinition>

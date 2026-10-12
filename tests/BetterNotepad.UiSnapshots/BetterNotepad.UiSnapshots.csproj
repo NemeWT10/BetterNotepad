@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- UI snapshot test: runs the built app in snapshot mode on a hidden Windows desktop (tools\HiddenDesktopRunner),
+       then checks the PNGs it rendered from its own visual tree (never from the screen) and the contrast report.
+       The app and the runner are built first (ProjectReference without referencing their assemblies). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>BetterNotepad.UiSnapshots</RootNamespace>
+    <AssemblyName>BetterNotepad.UiSnapshots</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BetterNotepad\BetterNotepad.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\tools\HiddenDesktopRunner\HiddenDesktopRunner.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+</Project>

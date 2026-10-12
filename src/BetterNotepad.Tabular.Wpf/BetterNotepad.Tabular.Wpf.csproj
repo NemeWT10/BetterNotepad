@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CSV / TSV table preview (virtualized, drawn directly) on top of the BetterNotepad.Tabular engine. -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>BetterNotepad.Tabular.Wpf</RootNamespace>
+    <AssemblyName>BetterNotepad.Tabular.Wpf</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BetterNotepad.Tabular\BetterNotepad.Tabular.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BetterNotepad.Ui.Sample" />
+  </ItemGroup>
+
+</Project>
