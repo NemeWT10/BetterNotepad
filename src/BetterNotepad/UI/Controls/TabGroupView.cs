@@ -403,6 +403,16 @@ public sealed class TabGroupView : Grid
         foreach (var v in _views.Values) v.CaptureState();
     }
 
+    /// <summary>
+    /// The window went to the tray: every view drops what it rebuilds by itself when shown again (<see cref="IReleasableView"/>:
+    /// rendered PDF pages, a Markdown preview document). The views stay, so caret, folds, find, zoom and scroll are untouched
+    /// and the window comes back instantly. (Closing the cached views as well was measured: no gain in the tray.)
+    /// </summary>
+    public void ReleaseRendering()
+    {
+        foreach (var v in _views.Values) (v as IReleasableView)?.ReleaseRendering();
+    }
+
     public void DisposeViews()
     {
         foreach (var v in _views.Values) v.Dispose();

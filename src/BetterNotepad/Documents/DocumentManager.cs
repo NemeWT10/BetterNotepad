@@ -54,7 +54,8 @@ public sealed class DocumentManager
 
     public TextDocument NewUntitled(string? content = null, string? languageId = null)
     {
-        var number = ++_untitledCounter;
+        var number = LowestFreeUntitledNumber();
+        _untitledCounter = Math.Max(_untitledCounter, number);
         var doc = new TextDocument(null) { UntitledNumber = number }; // title built from Loc at display time
         if (content is not null) doc.PendingBackupText = content;
         if (languageId is not null)
@@ -64,6 +65,15 @@ public sealed class DocumentManager
         }
         Add(doc);
         return doc;
+    }
+
+    /// <summary>Like Notepad++: the smallest number no open untitled tab uses ("new 1" again once the others are closed).</summary>
+    public int LowestFreeUntitledNumber()
+    {
+        var used = Documents.Where(d => d.IsUntitled && d.UntitledNumber > 0).Select(d => d.UntitledNumber).ToHashSet();
+        var n = 1;
+        while (used.Contains(n)) n++;
+        return n;
     }
 
     /// <summary>Opens (or returns the already open) document for <paramref name="path"/>. Content loads lazily.</summary>

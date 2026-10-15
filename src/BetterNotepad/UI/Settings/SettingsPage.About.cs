@@ -19,6 +19,24 @@ public sealed partial class SettingsPage
     /// <summary>Changelog per version, newest first; each item is a localization key.</summary>
     private static readonly (string Version, string[] Items)[] WhatsNew =
     [
+        ("0.6.0",
+        [
+            "settings.about.news.060.copy",
+            "settings.about.news.060.listing",
+            "settings.about.news.060.image",
+            "settings.about.news.060.menu",
+            "settings.about.news.060.explorer",
+            "settings.about.news.060.untitled",
+            "settings.about.news.060.tray",
+        ]),
+        ("0.5.0",
+        [
+            "settings.about.news.050.ide",
+            "settings.about.news.050.md",
+            "settings.about.news.050.pdf",
+            "settings.about.news.050.system",
+            "settings.about.news.050.pin",
+        ]),
         ("0.1.0",
         [
             "settings.about.news.010.tabs",

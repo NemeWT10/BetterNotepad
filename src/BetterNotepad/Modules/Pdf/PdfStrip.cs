@@ -181,6 +181,12 @@ internal sealed class PdfStrip : Grid
         }
     }
 
+    /// <summary>Drops every realized page (the window waits in the tray); <see cref="UpdateVisible"/> realizes the visible ones again.</summary>
+    public void ReleaseAll()
+    {
+        foreach (var slot in _live.Values.ToList()) Release(slot);
+    }
+
     private void Release(PageSlot slot)
     {
         _live.Remove(slot.Index);

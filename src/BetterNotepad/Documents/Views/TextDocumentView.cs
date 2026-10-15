@@ -16,7 +16,7 @@ namespace BetterNotepad.Documents.Views;
 /// Editor (+ live preview for Markdown/HTML/SVG/CSV). Layout follows the user's sketch: preview on
 /// the left, editor on the right (swappable), Preview | Split | Edit per tab.
 /// </summary>
-public sealed class TextDocumentView : Grid, IDocumentView
+public sealed class TextDocumentView : Grid, IDocumentView, IReleasableView
 {
     private readonly TextDocument _doc;
     private readonly Grid _content = new();
@@ -274,6 +274,9 @@ public sealed class TextDocumentView : Grid, IDocumentView
         _expectedEditorOffset = target;
         _editor.ScrollToVerticalOffset(target);
     }
+
+    /// <summary>Tray: the preview drops its rendered document (the editor itself stays as it is).</summary>
+    public void ReleaseRendering() => (_preview as IReleasableView)?.ReleaseRendering();
 
     public void Dispose()
     {

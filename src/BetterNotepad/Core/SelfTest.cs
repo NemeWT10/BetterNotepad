@@ -126,6 +126,17 @@ internal static class SelfTest
         Check(failures, untitled.Title == "scratch.txt" && untitled.UntitledNumber == 0, "custom untitled name kept: " + untitled.Title);
         DocumentManager.I.Close(untitled);
         appearance.Language = "system";
+
+        // numbering like Notepad++: a closed untitled tab frees its number, the next one reuses the lowest free number
+        var first = DocumentManager.I.NewUntitled();
+        var second = DocumentManager.I.NewUntitled();
+        var freed = first.UntitledNumber;
+        DocumentManager.I.Close(first);
+        var reused = DocumentManager.I.NewUntitled();
+        Check(failures, reused.UntitledNumber == freed && second.UntitledNumber == freed + 1, $"untitled numbers reuse the lowest free one: {freed}, {second.UntitledNumber}, {reused.UntitledNumber}");
+        DocumentManager.I.Close(reused);
+        DocumentManager.I.Close(second);
+        Check(failures, DocumentManager.I.LowestFreeUntitledNumber() == freed, "closing frees the numbers again");
         foreach (var id in new[] { "daylight", "neon", "sunset", "graphite", "aurora" })
         {
             appearance.Theme = id;
@@ -186,6 +197,10 @@ internal static class SelfTest
         await BetterNotepad.Modules.Sys.SystemSelfTest.Run(w, failures);
         await BetterNotepad.Modules.Pdf.PdfSelfTest.Run(w, failures);
         await PinSelfTest.Run(w, failures);
+        await BetterNotepad.Editor.Export.ExportSelfTest.Run(w, failures);
+        await BetterNotepad.Editor.Export.CopyImageSelfTest.Run(w, failures);
+        await BetterNotepad.Modules.Explorer.ExplorerSelfTest.Run(w, failures);
+        await BetterNotepad.UI.Tray.TraySelfTest.Run(w, failures);
     }
 
     /// <summary>Open → external change → keep mine → save → external change → reload → rename → close.</summary>

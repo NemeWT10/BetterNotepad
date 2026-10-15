@@ -31,7 +31,7 @@ public sealed class ToastHost : StackPanel
 
     public void Show(string text, ToastKind kind = ToastKind.Info, string? actionText = null, Action? action = null, double seconds = 2.8)
     {
-        while (Children.Count >= MaxToasts) Children.RemoveAt(0);
+        while (Children.Count >= MaxToasts) Remove((Border)Children[0]);
 
         var card = new Border
         {
@@ -78,7 +78,8 @@ public sealed class ToastHost : StackPanel
         card.Child = row;
         card.MouseLeftButtonUp += (_, _) => Dismiss(card);
         Children.Add(card);
-        Motion.Appear(card, rise: 12, fromScale: 0.96, ms: 280);
+        if (IsVisible) Motion.Appear(card, rise: 12, fromScale: 0.96, ms: 280);
+        else card.Opacity = 1; // hidden window (tray): no animation, nothing to render
 
         var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(seconds) };
         timer.Tick += (_, _) =>
@@ -92,14 +93,34 @@ public sealed class ToastHost : StackPanel
             }
             Dismiss(card);
         };
+        _timers[card] = timer;
         timer.Start();
+    }
+
+    /// <summary>Drops every toast at once, timers included, without animation (the window went to the tray or closed).</summary>
+    public void Clear()
+    {
+        foreach (var card in Children.OfType<Border>().ToList()) Remove(card);
     }
 
     private void Dismiss(Border card)
     {
         if (!Children.Contains(card)) return;
-        Motion.Disappear(card, () => Children.Remove(card), sink: 8, ms: 180);
+        if (!IsVisible)
+        {
+            Remove(card); // nobody sees a fade in a hidden window, and it would keep WPF rendering frames
+            return;
+        }
+        Motion.Disappear(card, () => Remove(card), sink: 8, ms: 180);
     }
+
+    private void Remove(Border card)
+    {
+        if (_timers.Remove(card, out var timer)) timer.Stop();
+        Children.Remove(card);
+    }
+
+    private readonly Dictionary<Border, DispatcherTimer> _timers = new();
 
     private static FrameworkElement BuildIcon(ToastKind kind)
     {

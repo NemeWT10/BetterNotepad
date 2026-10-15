@@ -50,12 +50,14 @@ public partial class MainWindow : Window
         BuildGroups();
         ApplyPresentation(); // before the placement: a pinned window has smaller minimum sizes
         ApplyPlacement();
+        InitExplorer();
 
         Model.Groups.CollectionChanged += OnGroupsChanged;
         Model.PropertyChanged += OnModelChanged;
         SourceInitialized += OnSourceInitialized;
         Activated += OnWindowActivated;
         StateChanged += OnStateChanged;
+        IsVisibleChanged += OnVisibleChanged;
         LocationChanged += (_, _) => CapturePlacement();
         SizeChanged += (_, _) => CapturePlacement();
         Closing += OnClosing;
@@ -219,6 +221,9 @@ public partial class MainWindow : Window
             case nameof(WindowModel.Ghost) or nameof(WindowModel.GhostOpacity):
                 ApplyGhost();
                 break;
+            case nameof(WindowModel.ExplorerWidth):
+                FitExplorerWidth();
+                break;
         }
     }
 
@@ -246,6 +251,7 @@ public partial class MainWindow : Window
             if (view.ActiveView is ICompactView compact) compact.EnterCompact();
         }
         if (ActiveDocument is { External: not ExternalChange.None } d && IsActive) QueueExternalPrompt(d);
+        _explorer?.FollowActive(ActiveDocument);
     }
 
     private void UpdateTitle()
@@ -497,6 +503,16 @@ public partial class MainWindow : Window
         }
         if (_tabSwitcher is { IsOpen: true } && _tabSwitcher.HandleKey(e)) return;
         if (IsOverlayFocused() && chord.Modifiers == ModifierKeys.None) return;
+        // the focused folder tree first: F2 / Delete / Enter / arrows mean its entries there, not the active tab
+        if (_explorer is { IsKeyboardFocusWithin: true } explorer)
+        {
+            if (explorer.HandleKey(e))
+            {
+                e.Handled = true;
+                return;
+            }
+            if (explorer.IsEditingName && chord.Modifiers == ModifierKeys.None) return;
+        }
 
         var ctx = Context();
         var cmd = Keymap.Match(chord, ctx);
@@ -544,7 +560,12 @@ public partial class MainWindow : Window
     {
         if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
         {
-            foreach (var f in files) OpenFile(f);
+            // a dropped folder opens in the Explorer panel, files open in tabs
+            foreach (var f in files)
+            {
+                if (Directory.Exists(f)) OpenFolder(f);
+                else OpenFile(f);
+            }
             e.Handled = true;
             Activate();
         }
@@ -586,8 +607,12 @@ public partial class MainWindow : Window
         Model.Groups.CollectionChanged -= OnGroupsChanged;
         Model.PropertyChanged -= OnModelChanged;
         foreach (var v in _groupViews.Values) v.DisposeViews();
+        _explorer?.Dispose(); // its watcher goes with the window
+        Toasts.Clear(); // pending toast timers would fire later and animate in a closed window
         _hwndSource?.RemoveHook(WndProc);
         if (!Model.IsMain) Workspace.I.Windows.Remove(Model);
+        // the last window on screen (e.g. a tab pinned on top) closed while the main window waits in the tray
+        if (!Model.IsMain && !App.Current.IsShuttingDown && App.Current.MainAppWindow is { IsVisible: false }) Tray.TrayRest.Settle();
     }
 
     public void HideToTray()
@@ -600,7 +625,23 @@ public partial class MainWindow : Window
             system.CloseToTrayHintShown = true;
             Tray.TrayService.I?.ShowHint(Loc.T("tray.hintTitle"), Loc.T("tray.hintText"));
         }
-        Tray.TrayService.I?.TrimMemory();
+        Tray.TrayRest.Enter(this);
+    }
+
+    /// <summary>Hidden in the tray: views drop what they rebuild by themselves (<see cref="TabGroupView.ReleaseRendering"/>), toasts go.</summary>
+    internal void ReleaseForTray()
+    {
+        CaptureViewState();
+        foreach (var v in _groupViews.Values) v.ReleaseRendering();
+        Toasts.Clear();
+        // no blinking caret in a hidden window; BringToFront focuses the active view again
+        if (IsKeyboardFocusWithin) Keyboard.ClearFocus();
+    }
+
+    /// <summary>Shown again (tray icon, hotkey, a file from Explorer…): no more trims while the main window is up.</summary>
+    private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (IsVisible && Model.IsMain) Tray.TrayRest.Leave();
     }
 
     public void CloseForShutdown()

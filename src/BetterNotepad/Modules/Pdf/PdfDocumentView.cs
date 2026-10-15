@@ -28,7 +28,7 @@ namespace BetterNotepad.Modules.Pdf;
 /// of pages that renders only what is visible at the current zoom. Text can be selected across pages (drag with
 /// auto-scroll, Shift+click, double / triple click, Ctrl+A) and copied. Protected files ask for their password.
 /// </summary>
-public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompactView
+public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompactView, IReleasableView
 {
     private const double PointToDip = 96.0 / 72.0;
     private const double ThumbWidth = 112;
@@ -76,6 +76,7 @@ public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompa
     private bool _busy;
     private bool _opening;
     private bool _isLocked;
+    private bool _hibernated;
 
     public PdfDocumentView(FileInfoDocument doc)
     {
@@ -130,6 +131,7 @@ public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompa
         };
 
         PreviewKeyDown += OnKey;
+        IsVisibleChanged += OnVisibleChanged;
         Loaded += OnLoaded;
         Unloaded += (_, _) =>
         {
@@ -155,6 +157,17 @@ public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompa
     internal double ZoomFactor => _zoom;
 
     internal bool FitsWidth => _fitWidth;
+
+    /// <summary>Pages realized in the strip / with a rendered bitmap; the page at the top (tests).</summary>
+    internal int LivePageCount => _pages.Live.Count;
+
+    internal int RenderedPageCount => _pages.Live.Values.Count(s => s.Image.Source is not null);
+
+    internal int CurrentPage => _pages.Current;
+
+    internal bool IsHibernated => _hibernated;
+
+    internal void ScrollToPage(int index) => _pages.ScrollToPage(index);
 
     /// <summary>Cancelled the password prompt: the tab shows the locked state with "Enter password".</summary>
     internal bool IsLocked => _isLocked;
@@ -1247,6 +1260,34 @@ public sealed class PdfDocumentView : Grid, IDocumentView, IZoomableView, ICompa
     public void OnActivated() { }
 
     public void OnDeactivated() => _handle?.Trim();
+
+    /// <summary>
+    /// Tray: drops the rendered pages, thumbnails, text layers and the document's caches. Zoom, scroll position, search and
+    /// selection stay; the visible pages render again when the view is shown.
+    /// </summary>
+    public void ReleaseRendering()
+    {
+        if (_handle is null) return;
+        EndDrag();
+        _pages.ReleaseAll();
+        _thumbs.ReleaseAll();
+        _layouts.Clear();
+        _handle.Trim(includeThumbnails: true);
+        _hibernated = true;
+    }
+
+    private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (!IsVisible || !_hibernated) return;
+        // deferred: this can fire in the middle of a layout pass (the pages render asynchronously anyway)
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            if (!_hibernated || !IsVisible || _handle is null) return;
+            _hibernated = false;
+            _pages.UpdateVisible();
+            if (_sidebar.Visibility == Visibility.Visible) _thumbs.UpdateVisible(); // a hidden sidebar realizes on its next resize
+        });
+    }
 
     public void CaptureState() { }
 

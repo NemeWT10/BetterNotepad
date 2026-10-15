@@ -105,6 +105,7 @@ public partial class MainWindow
         }
         Topmost = Model.Topmost;
         ApplyGhost();
+        ApplyExplorerPresentation();
     }
 
     /// <summary>The content follows the card's rounded corners (inside its 1 px border).</summary>

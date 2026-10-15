@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using BetterNotepad.Core;
 using BetterNotepad.Core.Commands;
 using BetterNotepad.Core.Localization;
@@ -79,6 +78,7 @@ internal static class SystemModule
 
     public static StartupMode ModeFor(WindowModel model)
     {
+        if (model.IsMain && PerfProbe.StartHidden) return StartupMode.Hidden; // test probe: autostart into the tray
         if (!model.IsMain || !StartMinimizedRequested || AppEnv.TestMode) return StartupMode.Normal;
         return Prefs.TrayEnabled ? StartupMode.Hidden : StartupMode.Minimized;
     }
@@ -105,7 +105,8 @@ internal static class SystemModule
             {
                 if (w.IsVisible) UpdateFlow.OnMainShown();
             };
-            if (!w.IsVisible && TrayService.IsAvailable) w.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => TrayService.I?.TrimMemory());
+            // autostart straight into the tray: lean from the start (trimmed once the startup work is done)
+            if (!w.IsVisible && (TrayService.IsAvailable || PerfProbe.StartHidden)) TrayRest.Settle();
             if (Installer.ShouldOfferInstall(s) && w.IsVisible) _ = OfferInstallLater(w);
         }
     }

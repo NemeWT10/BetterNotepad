@@ -56,6 +56,14 @@ public class CodeEditor : TextEditor
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         PreviewMouseWheel += OnPreviewMouseWheel;
+
+        // filled by the window each time it opens (commands, shortcuts, enabled state)
+        ContextMenu = new ContextMenu();
+        ContextMenuOpening += (_, e) =>
+        {
+            if (Window.GetWindow(this) is UI.Windows.MainWindow w) w.FillEditorMenu(this, ContextMenu);
+            else e.Handled = true;
+        };
     }
 
     /// <summary>The document model this editor shows.</summary>

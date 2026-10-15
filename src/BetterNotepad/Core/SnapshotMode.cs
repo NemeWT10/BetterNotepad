@@ -396,13 +396,288 @@ internal static class SnapshotMode
         if (Want("20"))
         await Guard("pinned", async () => await PinnedShots(w, fx));
 
+        // 21. copy with formatting / thesis listing: the dialog, and the RTF laid out the way a Word page would show it
+        if (Want("21"))
+            await Guard("listing", async () => await ListingShots(w));
+
+        // 22. Explorer (folder tree): a realistic project with the active file highlighted (three themes, Polish), the
+        //     header's actions, a context menu, inline rename (and its error), a new file, the empty state, a narrow window
+        if (Want("22"))
+            await Guard("explorer", async () => await ExplorerShots(w, fx));
+
         // reference sheets of icon glyphs (picking icons without guessing)
         await Guard("glyphs", async () =>
         {
             await UseTheme(w, "aurora");
             GlyphSheet(0xE700, "99_glyphs_e700");
             GlyphSheet(0xE900, "99_glyphs_e900");
+            GlyphSheet(0xEB00, "99_glyphs_eb00");
+            GlyphSheet(0xED00, "99_glyphs_ed00");
+            GlyphSheet(0xEF00, "99_glyphs_ef00");
+            GlyphSheet(0xF100, "99_glyphs_f100");
         });
+    }
+
+    private static async Task ExplorerShots(MainWindow w, Fixtures fx)
+    {
+        var appearance = SettingsService.I.Get<AppearanceSettings>();
+        var root = Path.Combine(AppEnv.LocalDir, "snapshot-fixtures", "explorer", "notebook-app");
+        Modules.Explorer.ExplorerFixtures.WriteProject(root);
+        w.Width = 1100;
+        w.Height = 700;
+        await UseTheme(w, "aurora");
+        appearance.Language = "en";
+        await Settle(w);
+
+        w.OpenFolder(root);
+        var panel = w.Explorer ?? throw new InvalidOperationException("no explorer panel");
+        await panel.Ready;
+        var store = Path.Combine(root, "src", "Notes", "NoteStore.cs");
+        var app = Path.Combine(root, "src", "App.cs");
+        w.OpenFile(app);
+        await Settle(w, 120);
+        if (w.ActiveDocument is TextDocument appDoc)
+        {
+            await appDoc.LoadAsync();
+            appDoc.Buffer.Insert(0, "// edited\n"); // an unsaved open file: accent dot in the tree
+        }
+        w.OpenFile(store);
+        await Settle(w, 150);
+        await panel.RevealAsync(Path.Combine(root, "docs", "guide.md"), center: false);
+        await panel.RevealAsync(store, center: true);
+        await Settle(w, 200);
+        panel.PinTools(true);
+
+        foreach (var (theme, lang) in new[] { ("aurora", "en"), ("daylight", "pl"), ("graphite", "en"), ("sunset", "en") })
+        {
+            await UseTheme(w, theme);
+            appearance.Language = lang;
+            panel.PinTools(theme is "aurora" or "daylight"); // the header's actions show on hover; graphite / sunset: the calm header
+            await Settle(w, 150);
+            await Save(w, $"22_explorer_{theme}_{lang}");
+        }
+        appearance.Language = "en";
+        panel.PinTools(true);
+        await UseTheme(w, "aurora");
+
+        // right-click menu of a file and the header's "…" menu, drawn where they open
+        if (panel.Tree?.Find(Path.Combine(root, "src", "Notes", "NoteParser.cs")) is { } parser)
+        {
+            panel.Select(parser);
+            parser.HasFocusRing = true; // a right-click focuses the tree (a window that is never active cannot really have it)
+            await Settle(w, 80);
+            if (panel.FindRow(parser) is { } row)
+            {
+                var menu = panel.BuildItemMenu(parser);
+                menu.PlacementTarget = row;
+                menu.IsOpen = true;
+                await Settle(w, 200);
+                await SaveWithPopup(w, menu, row.TranslatePoint(new Point(row.ActualWidth * 0.42, row.ActualHeight - 2), w), "22_explorer_menu_aurora_en");
+                menu.IsOpen = false;
+                await Settle(w);
+            }
+            foreach (var (theme, lang) in new[] { ("aurora", "en"), ("daylight", "pl") })
+            {
+                await UseTheme(w, theme);
+                appearance.Language = lang;
+                await Settle(w, 120);
+                panel.BeginRename(parser);
+                await Settle(w, 200);
+                await Save(w, $"22_explorer_rename_{theme}_{lang}");
+                if (panel.EditorBox is { } box) box.Text = "NoteStore.cs"; // taken: inline error
+                await Settle(w, 200);
+                if (panel.NameProblem is null) Failures.Add("explorer: no inline error for an existing name");
+                await Save(w, $"22_explorer_rename_error_{theme}_{lang}");
+                panel.CancelEdit();
+                await Settle(w);
+            }
+            appearance.Language = "en";
+            await UseTheme(w, "aurora");
+            var more = panel.BuildMoreMenu();
+            more.PlacementTarget = panel;
+            more.IsOpen = true;
+            await Settle(w, 200);
+            await SaveWithPopup(w, more, panel.TranslatePoint(new Point(panel.ActualWidth - 220, 34), w), "22_explorer_more_aurora_en");
+            more.IsOpen = false;
+            await Settle(w);
+        }
+
+        // a new file: the name box at the top of the folder, its icon following the typed extension
+        if (panel.Tree?.Find(Path.Combine(root, "src")) is { } src)
+        {
+            panel.Select(src);
+            await panel.BeginNewItemAsync(folder: false);
+            await Settle(w, 150);
+            if (panel.EditorBox is { } box) box.Text = "Parser.ts";
+            await Settle(w, 150);
+            await Save(w, "22_explorer_newfile_aurora_en");
+            panel.CancelEdit();
+            await Settle(w);
+        }
+
+        // narrow window, panel at its minimum width
+        w.Model.ExplorerWidth = Modules.Explorer.ExplorerPanel.MinPanelWidth;
+        foreach (var (theme, lang) in new[] { ("aurora", "en"), ("daylight", "pl") })
+        {
+            await UseTheme(w, theme);
+            appearance.Language = lang;
+            w.Width = 600;
+            await Settle(w, 200);
+            await Save(w, $"22_explorer_narrow_{theme}_{lang}");
+        }
+        appearance.Language = "en";
+        w.Width = 1100;
+        w.Model.ExplorerWidth = Documents.WindowModel.DefaultExplorerWidth;
+        panel.PinTools(false);
+
+        // the empty state
+        w.CloseFolder();
+        foreach (var (theme, lang) in new[] { ("aurora", "en"), ("daylight", "pl") })
+        {
+            await UseTheme(w, theme);
+            appearance.Language = lang;
+            await Settle(w, 150);
+            await Save(w, $"22_explorer_empty_{theme}_{lang}");
+        }
+        appearance.Language = "en";
+        await UseTheme(w, "aurora");
+        w.HideExplorer(animate: false);
+        foreach (var path in new[] { app, store })
+            if (DocumentManager.I.FindByPath(path) is TextDocument d && Workspace.I.Locate(d) is { } where)
+            {
+                if (d.IsDirty) d.MarkClean();
+                where.Group.Remove(d);
+                DocumentManager.I.Close(d);
+            }
+        w.Model.ActiveGroup.Active = fx.Cs;
+        await Settle(w);
+    }
+
+    /// <summary>A window with an open popup (menu) drawn over it where it opens: popups are separate windows, rendered on their own.</summary>
+    private static async Task SaveWithPopup(MainWindow w, FrameworkElement popup, Point at, string name)
+    {
+        await Settle(w, 40);
+        w.UpdateLayout();
+        popup.UpdateLayout();
+        var back = new RenderTargetBitmap((int)Math.Ceiling(w.ActualWidth * Scale), (int)Math.Ceiling(w.ActualHeight * Scale), 96 * Scale, 96 * Scale, PixelFormats.Pbgra32);
+        back.Render(w);
+        var front = new RenderTargetBitmap((int)Math.Ceiling(Math.Max(1, popup.ActualWidth) * Scale), (int)Math.Ceiling(Math.Max(1, popup.ActualHeight) * Scale), 96 * Scale, 96 * Scale, PixelFormats.Pbgra32);
+        front.Render(popup);
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            dc.DrawImage(back, new Rect(0, 0, w.ActualWidth, w.ActualHeight));
+            var x = Math.Min(at.X, w.ActualWidth - popup.ActualWidth);
+            var y = Math.Min(at.Y, w.ActualHeight - popup.ActualHeight);
+            dc.DrawImage(front, new Rect(x, y, popup.ActualWidth, popup.ActualHeight));
+        }
+        var bmp = new RenderTargetBitmap(back.PixelWidth, back.PixelHeight, 96 * Scale, 96 * Scale, PixelFormats.Pbgra32);
+        bmp.Render(visual);
+        WritePng(bmp, name);
+    }
+
+    private const string ListingCode =
+        "using System.Globalization;\n" +
+        "\n" +
+        "namespace Thesis.Parsing;\n" +
+        "\n" +
+        "public sealed class Parser\n" +
+        "{\n" +
+        "    /// <summary>Sums the numbers of one line, e.g. \"1; 2; 3,5\".</summary>\n" +
+        "    public static double Parse(string line)\n" +
+        "    {\n" +
+        "        var total = 0.0;\n" +
+        "        foreach (var part in line.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))\n" +
+        "            total += double.Parse(part.Replace(',', '.'), CultureInfo.InvariantCulture); // zażółć\n" +
+        "        return total;\n" +
+        "    }\n" +
+        "}\n";
+
+    private static async Task ListingShots(MainWindow w)
+    {
+        var appearance = SettingsService.I.Get<AppearanceSettings>();
+        var s = SettingsService.I.Get<BetterNotepad.Editor.Export.CopySettings>();
+        var doc = w.NewTab(content: ListingCode, languageId: "csharp");
+        await Settle(w, 150);
+        if (w.ActiveView?.Editor is not BetterNotepad.Editor.CodeEditor ed) throw new InvalidOperationException("no editor");
+        var d = ed.Document;
+        var start = d.GetLineByNumber(7).Offset;
+        var end = d.GetLineByNumber(14).EndOffset;
+        ed.Select(start, end - start);
+        s.ListingChapter = 3;
+        s.ListingNumber = 0;
+
+        foreach (var (theme, lang, options) in new[] { ("aurora", "en", false), ("daylight", "pl", false), ("graphite", "pl", true) })
+        {
+            await UseTheme(w, theme);
+            appearance.Language = lang;
+            s.ListingFrame = s.ListingLineNumbers = s.ListingColors = options;
+            await Settle(w);
+            BetterNotepad.Editor.Export.ListingDialog.Show(ed);
+            await Settle(w, 150);
+            if (Descendants<TextBox>(w.DialogLayer).FirstOrDefault(t => System.Windows.Automation.AutomationProperties.GetAutomationId(t) == "listing.description") is { } box)
+                box.Text = lang == "pl" ? "Metoda Parse klasy Parser" : "The Parse method of the Parser class";
+            await Settle(w, 60);
+            await Save(w, $"21_listing_dialog_{theme}_{lang}{(options ? "_options" : "")}");
+            ClickDialogButton(w, Loc.T("common.cancel"));
+            await Settle(w, 120);
+        }
+        s.ListingFrame = s.ListingLineNumbers = s.ListingColors = false;
+        appearance.Language = "en";
+        await UseTheme(w, "aurora");
+
+        // the clipboard RTF between two paragraphs of thesis body text (Arial 12 pt, 1.5 lines, 0.85 cm first-line indent)
+        var dlg = BetterNotepad.Editor.Export.ListingDialog.CreateForTest(ed);
+        dlg.SetDescription("Metoda Parse klasy Parser");
+        var block = BetterNotepad.Editor.Export.RichCopy.Capture(ed, null, true, out _);
+        var colored = BetterNotepad.Editor.Export.RichCopy.Capture(ed, BetterNotepad.Editor.Export.CopyPalettes.Print, true, out _);
+        var listing = dlg.Style(dlg.CaptionText(3, 1));
+        RenderRtf(BetterNotepad.Editor.Export.RichCodeWriter.Rtf(block, listing), "21_listing_rtf_default");
+        RenderRtf(BetterNotepad.Editor.Export.RichCodeWriter.Rtf(colored, listing with
+        {
+            LineNumbers = true, Border = Colors.Black, Gutter = Colors.Black, PaddingX = 4, PaddingY = 3,
+        }), "21_listing_rtf_boxed");
+        RenderRtf(BetterNotepad.Editor.Export.RichCodeWriter.Rtf(block, listing with
+        {
+            CaptionPlacement = BetterNotepad.Editor.Export.CaptionPlacement.Below, Source = Loc.T("listing.sourceDefault"),
+        }), "21_listing_rtf_below");
+        var formatted = BetterNotepad.Editor.Export.RichCopy.Capture(ed, BetterNotepad.Editor.Export.CopyPalettes.Document, true, out _);
+        RenderRtf(BetterNotepad.Editor.Export.RichCodeWriter.Rtf(formatted, BetterNotepad.Editor.Export.RichCopy.FormattedStyle(s) with { LineNumbers = true }),
+            "21_formatted_rtf");
+
+        w.Model.ActiveGroup.Remove(doc);
+        DocumentManager.I.Close(doc);
+        await Settle(w);
+    }
+
+    /// <summary>Loads clipboard RTF with WPF's reader (close to Word's paste) into an A4-wide white column and saves it.</summary>
+    private static void RenderRtf(string rtf, string name)
+    {
+        var column = 15.5 / 2.54 * 96;
+        var fd = new System.Windows.Documents.FlowDocument { PagePadding = new Thickness(0), ColumnWidth = 10000, Background = Brushes.White, Foreground = Brushes.Black };
+        System.Windows.Documents.Paragraph Body(string text) => new(new System.Windows.Documents.Run(text))
+        {
+            FontFamily = new FontFamily("Arial"), FontSize = 16, TextIndent = 0.85 / 2.54 * 96, LineHeight = 16 * 1.15 * 1.5, Margin = new Thickness(0),
+            TextAlignment = TextAlignment.Justify,
+        };
+        fd.Blocks.Add(Body("Na listingu 3.1 przedstawiono metodę Parse, która sumuje liczby zapisane w jednym wierszu pliku wejściowego."));
+        var tmp = new System.Windows.Documents.FlowDocument();
+        new System.Windows.Documents.TextRange(tmp.ContentStart, tmp.ContentEnd).Load(new MemoryStream(Encoding.ASCII.GetBytes(rtf)), DataFormats.Rtf);
+        foreach (var b in tmp.Blocks.ToList())
+        {
+            tmp.Blocks.Remove(b);
+            fd.Blocks.Add(b);
+        }
+        fd.Blocks.Add(Body("Dalsza część tekstu pracy opisuje sposób obsługi błędów i testy jednostkowe metody."));
+        var viewer = new FlowDocumentScrollViewer
+        {
+            Document = fd, Width = column, Height = 560, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, IsToolBarVisible = false,
+        };
+        var page = new Border { Background = Brushes.White, Padding = new Thickness(40), Child = viewer };
+        page.Measure(new Size(column + 80, 640));
+        page.Arrange(new Rect(0, 0, column + 80, 640));
+        SaveElement(page, name);
     }
 
     private static async Task PinnedShots(MainWindow w, Fixtures fx)

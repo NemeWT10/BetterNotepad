@@ -15,7 +15,9 @@
     <!-- Lean runtime: workstation GC without the background GC thread, conserve memory. -->
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <ServerGarbageCollection>false</ServerGarbageCollection>
-    <TieredPGO>true</TieredPGO>
+    <!-- No dynamic PGO: measured (tools\perf.ps1, 10 code tabs, published exe) ~35 % less CPU while working and 5-9 MB less
+         memory; the instrumented tier buys a notepad nothing. -->
+    <TieredPGO>false</TieredPGO>
   </PropertyGroup>
 
   <ItemGroup>

@@ -61,7 +61,7 @@ internal static class MarkdownStrings
 /// code blocks colored by the editor's highlighting definitions, a table of contents on the side,
 /// theme / language follow-up, and release of the rendered document while hidden.
 /// </summary>
-internal sealed class MarkdownPreviewView : IPreviewView
+internal sealed class MarkdownPreviewView : IPreviewView, IReleasableView
 {
     private static bool _tocOpen; // remembered for the session, shared by all Markdown tabs
     private static readonly Regex TaskBox = new(@"^(\s*(?:>\s*)*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])\]", RegexOptions.Compiled);
@@ -76,6 +76,7 @@ internal sealed class MarkdownPreviewView : IPreviewView
     private bool _bufferStale = true;
     private bool _optionsStale;
     private Debouncer? _release;
+    private bool _released;
     private bool _disposed;
 
     public MarkdownPreviewView(TextDocument doc)
@@ -141,6 +142,9 @@ internal sealed class MarkdownPreviewView : IPreviewView
 
     internal bool TocOpen => _tocPanel.Visibility == Visibility.Visible;
 
+    /// <summary>The rendered document was dropped (hidden in the tray / for a while); the next show renders again (tests).</summary>
+    internal bool IsReleased => _released;
+
     public void ScrollToLine(int line, double lineFraction, double scrollFraction) => _md.ScrollToLine(line, lineFraction, scrollFraction);
 
     // ───────────── content ─────────────
@@ -157,6 +161,7 @@ internal sealed class MarkdownPreviewView : IPreviewView
     {
         if (_disposed || !_doc.HasBuffer) return;
         _bufferStale = false;
+        _released = false;
         _md.Update(_doc.Buffer.Text, BaseFolder);
     }
 
@@ -187,9 +192,20 @@ internal sealed class MarkdownPreviewView : IPreviewView
 
     private void ReleaseIfHidden()
     {
-        if (_disposed || _root.IsVisible) return;
+        if (_disposed || _root.IsVisible || _released) return;
+        // the next render comes back to the same reading position (Preview mode has no editor to sync it from)
+        var line = _md.GetTopLine(out var fraction);
         _md.ReleaseContent();
+        if (line > 1 || fraction > 0) _md.ScrollToLine(line, fraction);
         _bufferStale = true;
+        _released = true;
+    }
+
+    /// <summary>The window went to the tray: free the rendered document now (instead of 20 s later, after the memory trim).</summary>
+    public void ReleaseRendering()
+    {
+        _release?.Cancel();
+        ReleaseIfHidden();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

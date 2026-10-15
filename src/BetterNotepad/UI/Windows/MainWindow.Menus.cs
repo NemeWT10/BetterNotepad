@@ -36,6 +36,7 @@ public partial class MainWindow
         PalettePill.ApplyTemplate();
         if (PalettePill.Template.FindName("PillKeys", PalettePill) is TextBlock keys)
             keys.Text = Keymap.GestureText("palette.files");
+        _explorer?.RefreshTexts(); // its tooltips and key chips name the toggle's shortcut
     }
 
     /// <summary>Called by settings after shortcuts changed.</summary>
@@ -101,6 +102,7 @@ public partial class MainWindow
     {
         yield return Cmd("file.new", Glyphs.Add);
         yield return Cmd("file.open", Glyphs.OpenFolder);
+        yield return Cmd("file.openFolder", Modules.Explorer.ExplorerLook.OpenFolderGlyph);
         yield return RecentMenu();
         yield return new Separator();
         yield return Cmd("file.save", Glyphs.Save);
@@ -114,6 +116,7 @@ public partial class MainWindow
         yield return Cmd("file.close", Glyphs.Close);
         yield return Cmd("file.closeAll", Glyphs.CloseAll);
         yield return Cmd("file.reopenClosed", Glyphs.Undo);
+        yield return Cmd("file.closeFolder", Modules.Explorer.ExplorerLook.CloseFolderGlyph);
         yield return new Separator();
         yield return Cmd("app.settings", Glyphs.Settings);
         yield return Cmd("app.quit", Glyphs.Power);
@@ -129,6 +132,9 @@ public partial class MainWindow
         yield return Cmd("edit.copy", Glyphs.Copy, "Ctrl+C");
         yield return Cmd("edit.paste", Glyphs.Paste, "Ctrl+V");
         yield return Cmd("edit.selectAll", Glyphs.Selection, "Ctrl+A");
+        yield return Cmd("editor.copyFormatted", Glyphs.Copy);
+        yield return Cmd("editor.copyAsListing", Glyphs.Code);
+        yield return Cmd("editor.copyAsImage", Glyphs.Image);
         yield return new Separator();
         yield return Cmd("editor.find", Glyphs.Search);
         yield return Cmd("editor.replace", Glyphs.Replace);
@@ -153,6 +159,8 @@ public partial class MainWindow
 
     private IEnumerable<Control> ViewMenu()
     {
+        yield return Cmd("view.toggleExplorer", Modules.Explorer.ExplorerLook.PanelGlyph, isChecked: () => ExplorerShown);
+        yield return new Separator();
         yield return Cmd("view.splitRight", Glyphs.SplitRight);
         yield return Cmd("view.splitDown", Glyphs.SplitDown);
         yield return Cmd("view.unsplit", Glyphs.Merge);
@@ -267,6 +275,22 @@ public partial class MainWindow
     }
 
     // ───────────── tab context menu ─────────────
+
+    /// <summary>Right-click in a text editor: clipboard, rich copy for documents, select all.</summary>
+    public void FillEditorMenu(BetterNotepad.Editor.CodeEditor editor, ContextMenu menu)
+    {
+        menu.Items.Clear();
+        menu.Items.Add(Cmd("edit.cut", Glyphs.Cut, "Ctrl+X"));
+        menu.Items.Add(Cmd("edit.copy", Glyphs.Copy, "Ctrl+C"));
+        menu.Items.Add(Cmd("edit.paste", Glyphs.Paste, "Ctrl+V"));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Cmd("editor.copyFormatted", Glyphs.Copy));
+        menu.Items.Add(Cmd("editor.copyAsListing", Glyphs.Code));
+        menu.Items.Add(Cmd("editor.copyAsImage", Glyphs.Image));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Cmd("edit.selectAll", Glyphs.Selection, "Ctrl+A"));
+        RefreshMenuState(menu);
+    }
 
     public ContextMenu BuildTabMenu(TabGroup group, Document doc)
     {

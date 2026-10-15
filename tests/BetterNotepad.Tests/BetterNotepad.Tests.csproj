@@ -29,6 +29,9 @@
     <Compile Include="..\..\src\BetterNotepad\Core\FileUtil.cs" Link="Linked\FileUtil.cs" />
     <Compile Include="..\..\src\BetterNotepad\Core\Commands\KeyChord.cs" Link="Linked\KeyChord.cs" />
     <Compile Include="..\..\src\BetterNotepad\UI\Windows\PinGeometry.cs" Link="Linked\PinGeometry.cs" />
+    <Compile Include="..\..\src\BetterNotepad\Editor\Export\RichCode.cs" Link="Linked\RichCode.cs" />
+    <Compile Include="..\..\src\BetterNotepad\Editor\Export\CodeWrap.cs" Link="Linked\CodeWrap.cs" />
+    <Compile Include="..\..\src\BetterNotepad\Modules\Explorer\ExplorerRules.cs" Link="Linked\ExplorerRules.cs" />
     <!-- Languages may be split into several partial files by the syntax-definition work. -->
     <Compile Include="..\..\src\BetterNotepad\Editor\Highlighting\Languages*.cs" Link="Linked\%(Filename)%(Extension)" />
   </ItemGroup>

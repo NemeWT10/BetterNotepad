@@ -129,5 +129,8 @@ internal static partial class Native
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool EmptyWorkingSet(nint process);
 
+    /// <summary>Pseudo handle of this process (GetCurrentProcess): nothing to open or close.</summary>
+    public static nint CurrentProcess => -1;
+
     public static int ColorRef(System.Windows.Media.Color c) => c.R | (c.G << 8) | (c.B << 16);
 }

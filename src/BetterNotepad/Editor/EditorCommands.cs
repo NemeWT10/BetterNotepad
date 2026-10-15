@@ -46,6 +46,16 @@ public static class EditorCommands
         Reg("editor.triggerCompletion", CatEdit, "Ctrl+Space", e => e.Features.Completion.Refresh(openIfClosed: true, manual: true),
             search: "podpowiedzi completion suggest autouzupełnianie", editable: true);
 
+        // rich copy for Word / Google Docs (Editor/Export)
+        Reg("editor.copyFormatted", CatEdit, "Ctrl+Shift+C", Export.RichCopy.CopyFormatted,
+            search: "kopiuj formatowanie word google docs dokument html rtf copy formatted rich");
+        Reg("editor.copyAsListing", CatEdit, null, Export.RichCopy.CopyAsListing,
+            search: "listing praca dyplomowa inżynierska magisterska licencjacka podpis thesis caption word google docs kopiuj copy");
+        Reg("editor.copyAsImage", CatEdit, null, Export.CopyImage.Copy,
+            search: "obraz png zdjęcie zrzut kodu slajd prezentacja czat image picture screenshot snippet slide chat share kopiuj copy");
+        Reg("editor.saveAsImage", CatEdit, null, Export.CopyImage.Save,
+            search: "obraz png zapisz plik eksport zrzut kodu slajd image picture screenshot snippet save export file");
+
         Reg("editor.fold", CatView, "Ctrl+Shift+[", e => e.Features.Fold(), e => e.Features.Folding.Manager is not null, search: "zwiń fold collapse");
         Reg("editor.unfold", CatView, "Ctrl+Shift+]", e => e.Features.Unfold(), e => e.Features.Folding.Manager is not null, search: "rozwiń unfold expand");
         Reg("editor.foldAll", CatView, null, e => e.Features.FoldAll(true), e => e.Features.Folding.Manager is not null, search: "zwiń wszystko fold all collapse");

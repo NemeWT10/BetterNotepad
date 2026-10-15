@@ -162,6 +162,26 @@ public sealed class WindowModel : ObservableObject
 
     public bool Maximized { get; set; }
 
+    // ───────────── Explorer (folder tree) of this window ─────────────
+
+    private string? _explorerRoot;
+    private bool _explorerVisible;
+    private double _explorerWidth = DefaultExplorerWidth;
+    private IReadOnlyList<string> _explorerExpanded = [];
+
+    public const double DefaultExplorerWidth = 260;
+
+    /// <summary>The folder shown in the Explorer panel (null = empty state).</summary>
+    public string? ExplorerRoot { get => _explorerRoot; set => Set(ref _explorerRoot, value); }
+
+    public bool ExplorerVisible { get => _explorerVisible; set => Set(ref _explorerVisible, value); }
+
+    /// <summary>Width chosen by dragging the panel's edge (DIPs; the window caps what is shown at half its width).</summary>
+    public double ExplorerWidth { get => _explorerWidth; set => Set(ref _explorerWidth, Math.Clamp(double.IsFinite(value) ? value : DefaultExplorerWidth, 170, 1600)); }
+
+    /// <summary>Expanded folders, relative to <see cref="ExplorerRoot"/> (bounded list).</summary>
+    public IReadOnlyList<string> ExplorerExpanded { get => _explorerExpanded; set => Set(ref _explorerExpanded, value ?? []); }
+
     public TabGroup AddGroup()
     {
         var g = new TabGroup();

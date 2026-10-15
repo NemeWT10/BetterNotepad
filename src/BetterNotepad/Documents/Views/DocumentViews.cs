@@ -41,6 +41,15 @@ public interface ICompactView
     void EnterCompact();
 }
 
+/// <summary>
+/// A view (or preview) whose rendered content can be dropped while its window waits hidden in the tray: rendered PDF pages,
+/// a Markdown preview document. It rebuilds that content by itself when it is shown again; nothing the user set is lost.
+/// </summary>
+public interface IReleasableView
+{
+    void ReleaseRendering();
+}
+
 /// <summary>Live preview next to a text editor (Markdown, HTML, SVG, CSV table).</summary>
 public interface IPreviewView
 {

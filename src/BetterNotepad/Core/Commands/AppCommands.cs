@@ -101,6 +101,11 @@ public static class AppCommands
     {
         Reg("file.new", CatFile, "Ctrl+N", c => WindowOf(c)?.NewTab(GroupOf(c)), search: "new nowy plik notatka");
         Reg("file.open", CatFile, "Ctrl+O", c => WindowOf(c)?.OpenDialog(), search: "open otwórz");
+        // folder tree: the folder shown in the window's Explorer panel
+        Reg("file.openFolder", CatFile, null, c => WindowOf(c)?.OpenFolderDialog(),
+            search: "folder katalog projekt project workspace explorer eksplorator drzewo tree");
+        Reg("file.closeFolder", CatFile, null, c => WindowOf(c)?.CloseFolder(), can: c => WindowOf(c) is { Model.ExplorerRoot: not null },
+            search: "folder katalog projekt explorer eksplorator drzewo tree");
         Reg("file.save", CatFile, "Ctrl+S", c => MainWindow.Fire(WindowOf(c)!.SaveAsync(DocOf(c))),
             can: c => WindowOf(c) is not null && DocOf(c)?.CanSave == true, search: "zapisz");
         Reg("file.saveAs", CatFile, "Ctrl+Shift+S", c => MainWindow.Fire(WindowOf(c)!.SaveAsync(DocOf(c), saveAs: true)),
@@ -195,6 +200,8 @@ public static class AppCommands
 
     private static void RegisterView()
     {
+        Reg("view.toggleExplorer", CatView, "Ctrl+Shift+E", c => WindowOf(c)?.ToggleExplorer(), can: c => WindowOf(c) is { Model.Pinned: false },
+            search: "explorer eksplorator drzewo folderu folder tree sidebar panel boczny pliki files");
         Reg("view.splitRight", CatView, "Ctrl+\\", c => WindowOf(c)?.Split(Orientation.Horizontal), search: "podziel split");
         Reg("view.splitDown", CatView, null, c => WindowOf(c)?.Split(Orientation.Vertical), search: "podziel split");
         Reg("view.unsplit", CatView, null, c => WindowOf(c)?.Unsplit(), can: c => WindowOf(c)?.Model.Groups.Count > 1);

@@ -21,6 +21,8 @@ internal static class CommandStrings
         // ── file ──
         ["cmd.file.new"] = ("Nowa karta", "New tab"),
         ["cmd.file.open"] = ("Otwórz plik…", "Open file…"),
+        ["cmd.file.openFolder"] = ("Otwórz folder…", "Open folder…"),
+        ["cmd.file.closeFolder"] = ("Zamknij folder", "Close folder"),
         ["cmd.file.save"] = ("Zapisz", "Save"),
         ["cmd.file.saveAs"] = ("Zapisz jako…", "Save as…"),
         ["cmd.file.saveAll"] = ("Zapisz wszystko", "Save all"),
@@ -57,6 +59,7 @@ internal static class CommandStrings
         ["cmd.editor.changeLanguage"] = ("Zmień język (kolorowanie składni)", "Change language mode"),
 
         // ── view ──
+        ["cmd.view.toggleExplorer"] = ("Pokaż / ukryj Eksplorator (drzewo folderu)", "Show / hide the Explorer (folder tree)"),
         ["cmd.view.splitRight"] = ("Podziel w prawo", "Split right"),
         ["cmd.view.splitDown"] = ("Podziel w dół", "Split down"),
         ["cmd.view.unsplit"] = ("Zlikwiduj podział", "Remove split"),

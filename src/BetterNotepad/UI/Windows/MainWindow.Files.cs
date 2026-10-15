@@ -38,12 +38,13 @@ public partial class MainWindow
         return doc;
     }
 
-    public void OpenFile(string path, TabGroup? group = null)
+    /// <summary>Opens a file in a tab (or activates its tab). <paramref name="focus"/> false keeps the keyboard where it is (the folder tree).</summary>
+    public void OpenFile(string path, TabGroup? group = null, bool focus = true)
     {
         if (string.IsNullOrWhiteSpace(path) || Directory.Exists(path)) return;
         if (Model.Pinned && App.Current.MainAppWindow is { } main && main != this)
         {
-            main.OpenFile(path);
+            main.OpenFile(path, focus: focus);
             if (DocumentManager.I.FindByPath(path) is { } opened && Workspace.I.Locate(opened) is { Window.IsMain: true }) main.BringToFront();
             return;
         }
@@ -60,7 +61,7 @@ public partial class MainWindow
             var w = App.Current.WindowFor(where.Window);
             if (w is not null && w != this) w.BringToFront();
             if (where.Window == Model) Model.ActiveGroup = where.Group;
-            FocusActiveSoon();
+            if (focus) FocusActiveSoon();
             return;
         }
 
@@ -77,7 +78,7 @@ public partial class MainWindow
         }
         RecentFiles.I.Add(path);
         FileWatchService.I.Sync();
-        FocusActiveSoon();
+        if (focus) FocusActiveSoon();
     }
 
     private static bool IsReadOnlyAttribute(string path)

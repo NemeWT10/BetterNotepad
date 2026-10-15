@@ -43,6 +43,8 @@ public partial class App : Application
 #endif
         // --test-mode + BETTERNOTEPAD_SNAPSHOT=<dir>: render UI scenarios to PNG (under SelfTest the same variable adds the palette / settings renders)
         if (SnapshotMode.Requested && Environment.GetEnvironmentVariable("BETTERNOTEPAD_SELFTEST") != "1") SnapshotMode.Start();
+        // --test-mode + BETTERNOTEPAD_PERF=<report>: tray memory / CPU scenario, then quit
+        else if (PerfProbe.Requested && Environment.GetEnvironmentVariable("BETTERNOTEPAD_SELFTEST") != "1") PerfProbe.Start();
 
         Program.Instance?.Listen(msg => Dispatcher.BeginInvoke(() => OnSecondInstance(msg)));
     }
@@ -64,7 +66,8 @@ public partial class App : Application
         if (Workspace.I.Windows.Count == 0) Workspace.I.Windows.Add(new WindowModel(isMain: true));
         var files = SettingsService.I.Get<FilesSettings>();
         if (files.RestoreSession && SessionService.Load() is { } session) SessionService.I.Restore(session);
-        if (!Workspace.I.Main.Groups.SelectMany(g => g.Tabs).Any() && Program.Args.Length == 0)
+        // a fresh start gets an empty tab, unless files were passed (a folder alone still gets one)
+        if (!Workspace.I.Main.Groups.SelectMany(g => g.Tabs).Any() && Program.Args.All(Directory.Exists))
             Workspace.I.Main.ActiveGroup.Add(DocumentManager.I.NewUntitled());
         SessionService.I.Attach();
 
@@ -139,8 +142,9 @@ public partial class App : Application
         if (target is null) return;
         foreach (var p in paths)
         {
-            if (Directory.Exists(p)) continue;
-            target.OpenFile(p);
+            // a folder (command line, second instance, "Open with") becomes the window's Explorer folder
+            if (Directory.Exists(p)) target.OpenFolder(p);
+            else target.OpenFile(p);
         }
     }
 

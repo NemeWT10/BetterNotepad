@@ -110,8 +110,15 @@
             </StackPanel>
         </Grid>
 
-        <!-- ───── tab groups ───── -->
-        <Grid x:Name="GroupsHost" Grid.Row="1"/>
+        <!-- ───── Explorer (folder tree, slides in from the left) | tab groups ───── -->
+        <Grid x:Name="WorkArea" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="ExplorerSlot" Width="0" Visibility="Collapsed" ClipToBounds="True"/>
+            <Grid x:Name="GroupsHost" Grid.Column="1"/>
+        </Grid>
 
         <!-- ───── status bar ───── -->
         <c:StatusBarView x:Name="Status" Grid.Row="2"/>

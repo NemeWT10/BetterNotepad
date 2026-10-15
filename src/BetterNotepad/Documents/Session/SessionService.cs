@@ -63,6 +63,11 @@ public sealed record SessionWindow
     public double SplitRatio { get; init; } = 0.5;
     public int ActiveGroup { get; init; }
     public List<SessionGroup> Groups { get; init; } = [];
+    /// <summary>Explorer panel: open folder, shown or not, width, expanded folders (relative). Absent in older sessions.</summary>
+    public string? ExplorerRoot { get; init; }
+    public bool ExplorerVisible { get; init; }
+    public double ExplorerWidth { get; init; } = WindowModel.DefaultExplorerWidth;
+    public List<string>? ExplorerExpanded { get; init; }
 }
 
 public sealed record SessionGroup
@@ -129,10 +134,14 @@ public sealed class SessionService
         ScheduleSave();
     }
 
+    /// <summary>Ids of closed documents (read by background backup writes; ids are unique, so it only grows by closed tabs).</summary>
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, byte> _closedIds = new();
+
     private void OnDocumentClosed(Document doc)
     {
         doc.PropertyChanged -= OnDocumentPropertyChanged;
         if (doc is TextDocument t) t.BufferChanged -= OnBufferChanged;
+        _closedIds[doc.Id] = 0; // a backup write already running in the background must not leave the file behind
         BackupStore.Delete(doc.Id);
         ScheduleSave();
     }
@@ -209,8 +218,10 @@ public sealed class SessionService
         {
             foreach (var (id, snap) in jobs)
             {
+                if (_closedIds.ContainsKey(id)) continue;
                 try { BackupStore.Write(id, snap.Text); }
                 catch (Exception ex) { Log.Error($"backup: write failed for {id}", ex); }
+                if (_closedIds.ContainsKey(id)) BackupStore.Delete(id); // closed while it was being written
             }
         }
 
@@ -299,6 +310,10 @@ public sealed class SessionService
                 Active = g.Active?.Id,
                 Mru = g.Mru.Select(t => t.Id).ToList(),
             }).ToList(),
+            ExplorerRoot = w.ExplorerRoot,
+            ExplorerVisible = w.ExplorerVisible,
+            ExplorerWidth = Math.Round(w.ExplorerWidth, 1),
+            ExplorerExpanded = w.ExplorerExpanded.Count > 0 ? [.. w.ExplorerExpanded] : null,
         }).ToList();
 
         return new SessionFile { UntitledCounter = DocumentManager.I.UntitledCounter, Documents = docs, Windows = windows };
@@ -347,6 +362,7 @@ public sealed class SessionService
                 w.GhostOpacity = sw.GhostOpacity;
                 w.SplitOrientation = sw.Split == "vertical" ? Orientation.Vertical : Orientation.Horizontal;
                 w.SplitRatio = sw.SplitRatio;
+                ApplyExplorer(sw, w);
 
                 for (var gi = 0; gi < sw.Groups.Count; gi++)
                 {
@@ -377,6 +393,18 @@ public sealed class SessionService
         {
             _suspended = false;
         }
+    }
+
+    /// <summary>
+    /// Explorer state of a window. A folder that is gone is not checked here (a network path could block the start):
+    /// the panel finds out when it lists it and quietly shows its empty state.
+    /// </summary>
+    public static void ApplyExplorer(SessionWindow sw, WindowModel w)
+    {
+        w.ExplorerRoot = string.IsNullOrWhiteSpace(sw.ExplorerRoot) ? null : sw.ExplorerRoot;
+        w.ExplorerVisible = sw.ExplorerVisible && !w.Pinned;
+        w.ExplorerWidth = sw.ExplorerWidth > 0 ? sw.ExplorerWidth : WindowModel.DefaultExplorerWidth;
+        w.ExplorerExpanded = sw.ExplorerExpanded is { Count: > 0 } list ? list.Take(200).ToList() : [];
     }
 
     private static int? LegacyUntitled(string? name)

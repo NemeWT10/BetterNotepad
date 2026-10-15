@@ -12,8 +12,10 @@ The executable is not code-signed, so Windows SmartScreen may show a warning. Ch
 ## Features
 
 - **Tabs and sessions:** tabs with pinning and reordering; the whole session, including unsaved changes and untitled tabs, is restored after a restart.
+- **Folder tree:** open a folder in the Explorer side panel (Ctrl+Shift+E) to browse, open, create, rename and delete files; it follows the active tab and updates live.
 - **Syntax highlighting:** 41 languages with per-theme palettes and language detection from content.
 - **Editing:** multi-cursor (next occurrence, all occurrences, cursors above and below), line move/duplicate/delete, code folding, bookmarks, bracket matching, auto-indent and as-you-type completion.
+- **Copy for documents:** paste code with syntax colors into Word or Google Docs (Ctrl+Shift+C), copy it as a thesis-style listing with a numbered caption, or copy it as a PNG image.
 - **Find and replace:** incremental search with regex, case and whole-word options.
 - **Command palette:** every command and quick file opening from the keyboard, with remappable shortcuts.
 - **Markdown:** live preview with a table of contents, split or single view, and clickable task lists.

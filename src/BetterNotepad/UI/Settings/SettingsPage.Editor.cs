@@ -85,6 +85,25 @@ public sealed partial class SettingsPage
         typing.Add(new SettingRow(Glyphs.Checkmark, Loc.T("settings.editor.spellCheck"), Loc.T("settings.editor.spellCheckDesc"),
             Switch("editor.spellCheck", () => e.SpellCheck, v => e.SpellCheck = v)));
 
+        // copy with formatting (Word / Google Docs); the thesis listing keeps its options in its own dialog
+        var cs = Section<BetterNotepad.Editor.Export.CopySettings>();
+        var copy = Group(panel, Loc.T("settings.editor.copyGroup"));
+        copy.Add(new SettingRow(Glyphs.Copy, Loc.T("settings.editor.copyLineNumbers"), Loc.T("settings.editor.copyLineNumbersDesc"),
+            Switch("copy.lineNumbers", () => cs.LineNumbers, v => cs.LineNumbers = v)));
+        copy.Add(new SettingRow(Glyphs.Color, Loc.T("settings.editor.copyThemeColors"), Loc.T("settings.editor.copyThemeColorsDesc"),
+            Switch("copy.themeColors", () => cs.ThemeColors, v => cs.ThemeColors = v)));
+        copy.Add(new SettingRow("", Loc.T("settings.editor.copyDedent"), Loc.T("settings.editor.copyDedentDesc"),
+            Switch("copy.dedent", () => cs.Dedent, v => cs.Dedent = v)));
+        copy.Add(new SettingRow(Glyphs.Code, Loc.T("listing.title"), Loc.T("settings.editor.copyListingHint"), null));
+
+        // copy as image (a PNG card for slides and chats)
+        var image = Group(panel, Loc.T("settings.editor.imageGroup"));
+        image.Add(new SettingRow(Glyphs.LineNumbers, Loc.T("settings.editor.imageLineNumbers"), Loc.T("settings.editor.imageLineNumbersDesc"),
+            Switch("copy.imageLineNumbers", () => cs.ImageLineNumbers, v => cs.ImageLineNumbers = v)));
+        image.Add(new SettingRow(Glyphs.Color, Loc.T("settings.editor.imageLight"), Loc.T("settings.editor.imageLightDesc"),
+            Switch("copy.imageLight", () => cs.ImageLightTheme, v => cs.ImageLightTheme = v)));
+        image.Add(new SettingRow(Glyphs.Image, Loc.T("settings.editor.imageHintTitle"), Loc.T("settings.editor.imageHint"), null));
+
         // minimap
         var minimap = Group(panel, Loc.T("settings.editor.minimapGroup"));
         var modeRow = minimap.Add(new SettingRow("\uE81E", Loc.T("settings.editor.minimap"), null,
