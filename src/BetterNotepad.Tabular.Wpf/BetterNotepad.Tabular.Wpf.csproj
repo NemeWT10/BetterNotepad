@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="BetterNotepad.Ui.Sample" />
+    <!-- the app's DEBUG self-test and snapshot scenarios drive the table through its test hooks -->
+    <InternalsVisibleTo Include="BetterNotepad" />
   </ItemGroup>
 
 </Project>

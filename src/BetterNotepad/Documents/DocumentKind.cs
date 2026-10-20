@@ -67,7 +67,7 @@ public static class FileTypes
     private static readonly HashSet<string> PdfExt = new(StringComparer.OrdinalIgnoreCase) { ".pdf" };
 
     public static readonly HashSet<string> ImageExt = new(StringComparer.OrdinalIgnoreCase)
-        { ".png", ".jpg", ".jpeg", ".jfif", ".gif", ".bmp", ".ico", ".tif", ".tiff", ".webp" };
+        { ".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".gif", ".bmp", ".dib", ".ico", ".tif", ".tiff", ".webp" };
 
     /// <summary>Containers / office / executables: never decoded as text.</summary>
     public static readonly HashSet<string> BinaryInfoExt = new(StringComparer.OrdinalIgnoreCase)

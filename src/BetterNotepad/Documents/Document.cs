@@ -13,6 +13,32 @@ public enum ExternalChange
 }
 
 /// <summary>
+/// A document that is not a text buffer but can be changed and saved (an edited image). The window's save, save as,
+/// close-with-unsaved-changes and changed-on-disk flows delegate to it; its <see cref="Document.IsDirty"/> drives the tab.
+/// </summary>
+public interface ISaveableDocument
+{
+    /// <summary>"Save as" dialog: the suggested file name, the filter ("PNG|*.png|JPEG|*.jpg;*.jpeg|…") and the entry to preselect (1-based).</summary>
+    (string FileName, string Filter, int FilterIndex) SaveAsDialog();
+
+    /// <summary>
+    /// Writes the document to <paramref name="path"/>: its own file (Save) or a new one it then shows (Save as).
+    /// <paramref name="filterIndex"/> = the "Save as" filter the user picked, 0 = by the extension. False: the user cancelled a
+    /// follow-up question. Throws like a file write (UnauthorizedAccessException, IOException…).
+    /// </summary>
+    Task<bool> SaveToAsync(string path, int filterIndex = 0);
+
+    /// <summary>The file on disk is no longer what the document was read from (changed or deleted by another program).</summary>
+    bool DiskDiffers(out bool deleted);
+
+    /// <summary>Reads the file again, dropping the changes made in the app.</summary>
+    Task ReloadAsync();
+
+    /// <summary>"Keep my version" after a change on disk: stays unsaved, saving overwrites (or recreates) the file.</summary>
+    void KeepMine();
+}
+
+/// <summary>
 /// An open file or untitled buffer. One document can be shown in several tab groups / windows
 /// at once (views are separate from documents).
 /// </summary>

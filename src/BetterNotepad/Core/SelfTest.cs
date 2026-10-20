@@ -200,6 +200,9 @@ internal static class SelfTest
         await BetterNotepad.Editor.Export.ExportSelfTest.Run(w, failures);
         await BetterNotepad.Editor.Export.CopyImageSelfTest.Run(w, failures);
         await BetterNotepad.Modules.Explorer.ExplorerSelfTest.Run(w, failures);
+        await BetterNotepad.Modules.Html.HtmlSelfTest.Run(w, failures);
+        await BetterNotepad.Modules.Imaging.ImagingSelfTest.Run(w, failures);
+        await BetterNotepad.Modules.Csv.CsvSelfTest.Run(w, failures);
         await BetterNotepad.UI.Tray.TraySelfTest.Run(w, failures);
     }
 

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Windows.Media;
 
 namespace BetterNotepad.Html;
@@ -16,8 +17,34 @@ public sealed class HtmlPreview : WebPreview
 
     protected override string Compose(string text, string configTag)
     {
+        // while the internet is off, resource hints must not open connections (they never pass the request filter)
+        if (!Options.AllowRemoteContent) text = ResourceHints.Neutralize(text);
         var marked = HtmlLineMarker.Mark(text, svg: false);
         return marked.Text.Insert(marked.HeadInsert, configTag);
+    }
+}
+
+/// <summary>
+/// &lt;link rel="preconnect | dns-prefetch | prefetch | prerender"&gt; make Chromium resolve hosts and open connections on its own,
+/// outside WebResourceRequested. With internet content blocked the served copy renames those rel tokens (bn-off-…); line breaks
+/// are untouched, so the line marks stay right. The editor text is never changed.
+/// </summary>
+internal static partial class ResourceHints
+{
+    [GeneratedRegex(@"<link\b[^>]*>", RegexOptions.IgnoreCase)]
+    private static partial Regex LinkTag();
+
+    [GeneratedRegex(@"(\brel\s*=\s*)(""[^""]*""|'[^']*'|[^\s>]+)", RegexOptions.IgnoreCase)]
+    private static partial Regex RelAttribute();
+
+    [GeneratedRegex(@"\b(dns-prefetch|preconnect|prefetch|prerender)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HintToken();
+
+    public static string Neutralize(string html)
+    {
+        if (html.IndexOf("<link", StringComparison.OrdinalIgnoreCase) < 0) return html;
+        return LinkTag().Replace(html, tag => RelAttribute().Replace(tag.Value,
+            rel => rel.Groups[1].Value + HintToken().Replace(rel.Groups[2].Value, "bn-off-$1")));
     }
 }
 

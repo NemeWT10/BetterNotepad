@@ -437,7 +437,9 @@ public sealed class TabGroupView : Grid
         var groupName = "view-" + Group.Id.ToString("N");
         if (doc.Kind == DocumentKind.Csv)
         {
+            // Table | Split | Text: the table, the table next to the text (selection and scrolling follow), the text alone
             AddSegment(doc, ViewMode.Preview, Glyphs.Table, "view.table", groupName);
+            AddSegment(doc, ViewMode.Split, Glyphs.Columns, "view.split", groupName);
             AddSegment(doc, ViewMode.Edit, Glyphs.Text, "view.text", groupName);
             return;
         }

@@ -180,11 +180,17 @@ public sealed record Annotation(EditTool Kind, Color Color, double Size, Point[]
     }
 }
 
-/// <summary>The edit list with snapshot undo / redo (records are immutable, a snapshot is a cheap list copy).</summary>
+/// <summary>
+/// The edit list with snapshot undo / redo (records are immutable, a snapshot is a cheap list copy). One document can be
+/// shared by several viewers of the same picture (a split view): each recomposes on <see cref="Changed"/>.
+/// </summary>
 public sealed class EditDocument
 {
     private readonly Stack<List<EditOp>> _undo = new();
     private readonly Stack<List<EditOp>> _redo = new();
+    private List<EditOp> _saved;
+
+    public EditDocument() => _saved = Ops;
 
     public List<EditOp> Ops { get; private set; } = [];
 
@@ -194,10 +200,20 @@ public sealed class EditDocument
 
     public bool CanRedo => _redo.Count > 0;
 
-    /// <summary>The picture differs from the file (saving bakes the edits into the file and resets the list).</summary>
-    public bool IsModified => Ops.Count > 0;
+    /// <summary>
+    /// The picture differs from the last saved state. Saving keeps the list (and undo) when the app keeps the original as its
+    /// base (<see cref="MarkSaved"/>); undoing back to the saved state is "not modified" again.
+    /// </summary>
+    public bool IsModified => !ReferenceEquals(Ops, _saved);
 
+    /// <summary>Anything to undo, redo or show (the original picture is needed as the base).</summary>
+    public bool HasHistory => Ops.Count > 0 || _undo.Count > 0 || _redo.Count > 0;
+
+    /// <summary>The edit list changed (push, undo, redo, reset): viewers recompose.</summary>
     public event Action? Changed;
+
+    /// <summary><see cref="IsModified"/> changed without a new picture (<see cref="MarkSaved"/>).</summary>
+    public event Action? SavedChanged;
 
     public void Push(EditOp op)
     {
@@ -227,12 +243,49 @@ public sealed class EditDocument
         Changed?.Invoke();
     }
 
+    /// <summary>The current state is what the file now holds.</summary>
+    public void MarkSaved()
+    {
+        if (ReferenceEquals(_saved, Ops)) return;
+        _saved = Ops;
+        SavedChanged?.Invoke();
+    }
+
     /// <summary>The image was saved with these edits baked in: start a fresh list (the file is the new base).</summary>
     public void Reset()
     {
         _undo.Clear();
         _redo.Clear();
         Ops = [];
+        _saved = Ops;
+        Version++;
+        Changed?.Invoke();
+    }
+
+    /// <summary>The whole state (current list, undo / redo, saved marker) for a backup that survives a restart.</summary>
+    public EditJournal Capture(int maxUndo = 100)
+    {
+        var undo = _undo.Take(maxUndo).Reverse().ToList(); // bottom → top
+        var redo = _redo.Reverse().ToList();
+        int? saved = null;
+        var all = undo.Concat([Ops]).Concat(redo).ToList();
+        for (var i = 0; i < all.Count; i++)
+            if (ReferenceEquals(all[i], _saved))
+                saved = i;
+        return new EditJournal(undo, Ops, redo, saved);
+    }
+
+    /// <summary>Restores a captured state (replacing everything).</summary>
+    public void Restore(EditJournal j)
+    {
+        _undo.Clear();
+        _redo.Clear();
+        foreach (var s in j.Undo) _undo.Push(s); // bottom → top
+        foreach (var s in j.Redo) _redo.Push(s);
+        Ops = j.Current;
+        // the saved marker points at one of the snapshots (or none of them: the file holds some other state)
+        var all = j.Undo.Concat([j.Current]).Concat(j.Redo).ToList();
+        _saved = j.Saved is { } s2 && s2 >= 0 && s2 < all.Count ? all[s2] : [];
         Version++;
         Changed?.Invoke();
     }

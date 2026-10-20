@@ -711,6 +711,11 @@ public sealed partial class ExplorerPanel : Grid
             OpenContextMenu(sel, null);
             return true;
         }
+        if (mods == ModifierKeys.Control && key == Key.V)
+        {
+            _ = PasteAsync(sel);
+            return true;
+        }
         if (mods != ModifierKeys.None) return false;
         var page = Math.Max(1, (int)((_scroll?.ViewportHeight ?? 240) / ExplorerRow.RowHeight) - 1);
         switch (key)

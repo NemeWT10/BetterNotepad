@@ -272,9 +272,8 @@ public static class AppCommands
     private static void CyclePreview(CommandContext c)
     {
         if (TextOf(c) is not { } t) return;
-        t.ViewMode = t.Kind == DocumentKind.Csv
-            ? (t.ViewMode == ViewMode.Preview ? ViewMode.Edit : ViewMode.Preview)
-            : t.ViewMode switch { ViewMode.Preview => ViewMode.Split, ViewMode.Split => ViewMode.Edit, _ => ViewMode.Preview };
+        // Preview → Split → Edit (CSV: Table → Split → Text)
+        t.ViewMode = t.ViewMode switch { ViewMode.Preview => ViewMode.Split, ViewMode.Split => ViewMode.Edit, _ => ViewMode.Preview };
     }
 
     // ───────────── edit (clipboard, undo) ─────────────

@@ -174,6 +174,31 @@ internal static class Ui
         return b;
     }
 
+    /// <summary>A quiet text button (the app's SecondaryButton): surface, hairline border.</summary>
+    public static Button Secondary(string text, Action click)
+    {
+        var b = new Button { Content = text, Cursor = Cursors.Hand, Focusable = false, Padding = new Thickness(16, 7, 16, 8) };
+        b.Template = (ControlTemplate)XamlReader.Parse("""
+<ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Button">
+  <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+    <Border x:Name="Bd" CornerRadius="9" BorderThickness="1" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.BorderStrong}"/>
+    <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      TextElement.Foreground="{DynamicResource Brush.Text}" TextElement.FontSize="12.5"/>
+  </Grid>
+  <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.SurfaceHover}"/></Trigger>
+    <Trigger Property="IsPressed" Value="True">
+      <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.SurfacePressed}"/>
+      <Setter TargetName="Root" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
+    </Trigger>
+  </ControlTemplate.Triggers>
+</ControlTemplate>
+""");
+        TextElement.SetFontFamily(b, Font);
+        b.Click += (_, _) => click();
+        return b;
+    }
+
     /// <summary>Compact number field on a panel.</summary>
     public static TextBox NumberField()
     {

@@ -57,6 +57,28 @@ public sealed class InfoView : Grid, IDocumentView
 
     public CodeEditor? Editor => null;
 
+    /// <summary>
+    /// Shown inside another view (the image tab's info panel): no header (the tab names the file), narrow margins and labels.
+    /// </summary>
+    public bool Embedded
+    {
+        get => _embedded;
+        init
+        {
+            _embedded = value;
+            if (value)
+            {
+                _column.MaxWidth = double.PositiveInfinity;
+                _column.Margin = new Thickness(18, 14, 18, 24);
+            }
+        }
+    }
+
+    private readonly bool _embedded;
+
+    /// <summary>"Clear metadata" rewrote the file (the owner refreshes what it knows about it).</summary>
+    public event Action? Stripped;
+
     /// <summary>For tests and snapshots: metadata has been read (or failed).</summary>
     internal bool MetadataReady => !_metaLoading && (_report is not null || _metaError is not null);
 
@@ -71,8 +93,8 @@ public sealed class InfoView : Grid, IDocumentView
         var info = new FileInfo(Path);
         var exists = info.Exists;
 
-        // header: icon, name, folder, "open folder"
-        var head = new Grid { Margin = new Thickness(0, 0, 0, 22) };
+        // header: icon, name, folder, "open folder" (an embedded panel has its own title)
+        var head = new Grid { Margin = new Thickness(0, 0, 0, 22), Visibility = _embedded ? Visibility.Collapsed : Visibility.Visible };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -105,13 +127,16 @@ public sealed class InfoView : Grid, IDocumentView
         {
             Row(file, Loc.T("info.size"), FormatSize(info.Length));
             Row(file, Loc.T("info.kind"), info.Extension.Length > 0 ? info.Extension.TrimStart('.').ToUpperInvariant() : "—");
-            Row(file, Loc.T("info.created"), FormatDate(info.CreationTime));
-            Row(file, Loc.T("info.modified"), FormatDate(info.LastWriteTime));
-            Row(file, Loc.T("info.accessed"), FormatDate(info.LastAccessTime));
+            // a narrow panel: the short date (one line)
+            string Date(DateTime t) => _embedded ? t.ToString("g", Loc.I.Culture) : FormatDate(t);
+            Row(file, Loc.T("info.created"), Date(info.CreationTime));
+            Row(file, Loc.T("info.modified"), Date(info.LastWriteTime));
+            Row(file, Loc.T("info.accessed"), Date(info.LastAccessTime));
         }
         Row(file, Loc.T("info.path"), Path, selectable: true, last: true);
 
         // checksums, on demand
+        var hashStart = _column.Children.Count;
         if (exists)
         {
             var hashes = Section(Loc.T("info.hashGroup"), out var hashHeader);
@@ -136,6 +161,7 @@ public sealed class InfoView : Grid, IDocumentView
         }
 
         // metadata (read-only) + clear
+        var metaStart = _column.Children.Count;
         var meta = Section(Loc.T("info.metaGroup"), out var metaHeader);
         _stripButton = MakeButton(Loc.T("info.strip"), Glyphs.Delete, "SecondaryButton", () => _ = StripAsync());
         _stripButton.Padding = new Thickness(12, 5, 12, 5);
@@ -144,6 +170,14 @@ public sealed class InfoView : Grid, IDocumentView
         (_metaHost.Parent as Panel)?.Children.Remove(_metaHost); // the previous build's card
         meta.Children.Add(_metaHost);
         FillMetadata();
+
+        // in the image tab's panel the picture's metadata (camera, GPS…) matters more than checksums: it comes first
+        if (_embedded && exists)
+        {
+            var hashParts = _column.Children.Cast<UIElement>().Skip(hashStart).Take(Math.Max(0, metaStart - hashStart)).ToList();
+            foreach (var part in hashParts) _column.Children.Remove(part);
+            foreach (var part in hashParts) _column.Children.Add(part);
+        }
     }
 
     private StackPanel Section(string title) => Section(title, out _);
@@ -173,7 +207,7 @@ public sealed class InfoView : Grid, IDocumentView
     private void Row(StackPanel rows, string label, string value, bool selectable = false, bool mono = false, HashAlgorithmKind? hash = null, bool last = false)
     {
         var grid = new Grid { MinHeight = 40 };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(170) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(_embedded ? 112 : 170) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         var l = Text(label, 12.5, "Brush.TextDim");
         l.VerticalAlignment = VerticalAlignment.Center;
@@ -411,6 +445,7 @@ public sealed class InfoView : Grid, IDocumentView
             var count = result.Removed.Count + (result.ZoneRemoved && !result.Removed.Contains("file.Zone") ? 1 : 0);
             if (count == 0 && !result.ContentChanged) w.Toasts.Show(Loc.T("info.strippedNothing"), ToastKind.Info);
             else w.Toasts.Show(Loc.Plural("info.stripped", Math.Max(1, count)), ToastKind.Success);
+            Stripped?.Invoke();
         }
         catch (Exception ex)
         {

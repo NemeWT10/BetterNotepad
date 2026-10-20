@@ -38,6 +38,9 @@
     <ProjectReference Include="..\BetterNotepad.Hex\BetterNotepad.Hex.csproj" />
     <ProjectReference Include="..\BetterNotepad.Metadata\BetterNotepad.Metadata.csproj" />
     <ProjectReference Include="..\BetterNotepad.Pdf\BetterNotepad.Pdf.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Html\BetterNotepad.Html.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Imaging\BetterNotepad.Imaging.csproj" />
+    <ProjectReference Include="..\BetterNotepad.Tabular.Wpf\BetterNotepad.Tabular.Wpf.csproj" />
   </ItemGroup>
 
   <ItemGroup>

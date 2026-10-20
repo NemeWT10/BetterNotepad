@@ -202,6 +202,30 @@ internal static class ExplorerSelfTest
                 Check(ExplorerFileOps.LastCopied == Path.Combine("gamma", "one.cs"), "relative path: " + ExplorerFileOps.LastCopied);
             }
 
+            // ── paste into a folder (the clipboard itself is never read in test mode): copy with " (2)", move, picture ──
+            if (tree.Find(P("gamma")) is { } gammaNode && (tree.Find(P("Beta")) ?? tree.Find(P("beta"))) is { } betaNode)
+            {
+                var src = Path.Combine(AppEnv.LocalDir, "explorer-paste-src");
+                Directory.CreateDirectory(Path.Combine(src, "sub"));
+                File.WriteAllText(Path.Combine(src, "pic.txt"), "a");
+                File.WriteAllText(Path.Combine(src, "sub", "inner.txt"), "b");
+                var copied = await panel.PasteFilesAsync(gammaNode, [Path.Combine(src, "pic.txt"), Path.Combine(src, "sub")], move: false);
+                Check(copied.Count == 2 && File.Exists(P("gamma", "pic.txt")) && File.Exists(P("gamma", "sub", "inner.txt")) && File.Exists(Path.Combine(src, "pic.txt")),
+                    "paste copies files and folders: " + string.Join("|", copied));
+                var again = await panel.PasteFilesAsync(gammaNode, [Path.Combine(src, "pic.txt")], move: false);
+                Check(again.Count == 1 && FileUtil.PathEquals(again[0], P("gamma", "pic (2).txt")), "existing name gets (2): " + string.Join("|", again));
+                Check(tree.Find(P("gamma", "pic (2).txt")) is { IsSelected: true }, "pasted file not shown and selected");
+                var movedPaths = await panel.PasteFilesAsync(betaNode, [P("gamma", "pic (2).txt")], move: true);
+                Check(movedPaths.Count == 1 && !File.Exists(P("gamma", "pic (2).txt")) && File.Exists(Path.Combine(betaNode.FullPath, "pic (2).txt")), "cut + paste moves the file");
+                var none = await panel.PasteFilesAsync(gammaNode, [P("gamma")], move: false);
+                Check(none.Count == 0, "a folder was pasted into itself");
+                var bmp = System.Windows.Media.Imaging.BitmapSource.Create(4, 4, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[4 * 4 * 4], 16);
+                var png = await panel.PasteImageAsync(gammaNode, bmp);
+                Check(png is not null && File.Exists(png) && png.EndsWith(".png", StringComparison.Ordinal), "clipboard picture saved as PNG: " + png);
+                Directory.Delete(src, recursive: true);
+            }
+            else Check(false, "paste: fixture folders missing");
+
             // ── session: the window's explorer state round-trips, older sessions still load ──
             await Task.Delay(50);
             var file = SessionService.I.Capture();

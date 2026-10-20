@@ -16,11 +16,17 @@ internal static class PreviewBridge
   if (window.top !== window || window.__bnBridge) return;
   window.__bnBridge = true;
   var host = window.chrome && window.chrome.webview;
-  var cfg = { lines: 1, svg: false, restore: null };
-  var marks = null, stale = true, expectY = null, pending = false, userScrolled = false, zoom = 1;
+  var cfg = { lines: 1, svg: false, restore: null, picture: false };
+  var marks = null, stale = true, expectY = null, pending = false, userScrolled = false, zoom = 1, painting = false;
   try { history.scrollRestoration = 'manual'; } catch (e) { }
 
   function post(o) { if (host) host.postMessage(o); }
+  // picture hosting (a transparent window shows captures of the page): tell the host when the page may look different
+  function paint() {
+    if (!cfg.picture || painting) return;
+    painting = true;
+    requestAnimationFrame(function () { painting = false; post({ t: 'p' }); });
+  }
   function root() { return document.scrollingElement || document.documentElement; }
   function maxY() { var r = root(); return Math.max(0, r.scrollHeight - window.innerHeight); }
   function docEnd() { return Math.max(root().scrollHeight, 1); }
@@ -86,6 +92,7 @@ internal static class PreviewBridge
   }
 
   window.addEventListener('scroll', function () {
+    paint();
     if (pending || cfg.svg) return;
     pending = true;
     requestAnimationFrame(function () {
@@ -106,9 +113,16 @@ internal static class PreviewBridge
     else if (cfg.svg) { zoom = 1; fitSvg(); }
   });
 
+  // our Content Security Policy (added while internet content is blocked) stopped a web socket / fetch: count it
+  document.addEventListener('securitypolicyviolation', function (e) {
+    var u = e.blockedURI || '';
+    if (e.disposition === 'enforce' && /^(wss?|https?):/i.test(u)) post({ t: 'blocked', uri: u, p: e.originalPolicy || '' });
+  });
+
   if (host) host.addEventListener('message', function (e) {
     var d = e.data || {};
     if (d.t === 'to') scrollToLine(d.line, d.frac, d.sf);
+    else if (d.t === 'zoom' && cfg.svg) zoomSvg(d.dy);
   });
 
   // ── SVG: fit into the window (vector, so small icons are scaled up too), Ctrl+wheel zooms ──
@@ -132,15 +146,19 @@ internal static class PreviewBridge
     k = Math.max(k, 0.01);
     s.style.width = (w * k) + 'px'; s.style.height = (h * k) + 'px';
     document.body.classList.toggle('bn-big', zoom > 1.001);
+    paint();
+  }
+  function zoomSvg(deltaY) {
+    zoom = Math.max(0.1, Math.min(40, zoom * Math.pow(1.0015, -deltaY)));
+    fitSvg();
   }
   window.addEventListener('wheel', function (e) {
     if (!cfg.svg || !e.ctrlKey) return;
     e.preventDefault();
-    zoom = Math.max(0.1, Math.min(40, zoom * Math.pow(1.0015, -e.deltaY)));
-    fitSvg();
+    zoomSvg(e.deltaY);
   }, { passive: false });
 
-  window.addEventListener('resize', function () { stale = true; if (cfg.svg) fitSvg(); });
+  window.addEventListener('resize', function () { stale = true; if (cfg.svg) fitSvg(); paint(); });
 
   function restore() {
     var r = cfg.restore;
@@ -152,7 +170,11 @@ internal static class PreviewBridge
   document.addEventListener('DOMContentLoaded', function () {
     readCfg();
     if (cfg.svg) fitSvg();
-    try { new ResizeObserver(function () { stale = true; }).observe(document.documentElement); } catch (e) { }
+    try { new ResizeObserver(function () { stale = true; paint(); }).observe(document.documentElement); } catch (e) { }
+    if (cfg.picture) {
+      try { new MutationObserver(paint).observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true }); } catch (e) { }
+      ['animationend', 'transitionend', 'load', 'input', 'change', 'toggle'].forEach(function (n) { document.addEventListener(n, paint, true); });
+    }
     restore();
     post({ t: 'ready' });
   });
@@ -162,6 +184,7 @@ internal static class PreviewBridge
     // late images / fonts moved things: restore again unless the user scrolled meanwhile
     if (!userScrolled) restore();
     post({ t: 'loaded' });
+    paint();
   });
 })();
 """;

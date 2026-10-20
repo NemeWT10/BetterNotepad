@@ -47,7 +47,8 @@ public sealed class SnapshotTests : IClassFixture<SnapshotRun>
         foreach (var file in Directory.GetFiles(_run.PngDir, "*.png"))
         {
             var info = Inspect(file);
-            if (info.Width < 150 || info.Height < 150) bad.Add($"{Path.GetFileName(file)}: only {info.Width}x{info.Height}");
+            // strips (a notice bar, a toolbar) are cropped on purpose: wide and short is fine, tiny is not
+            if (info.Width < 150 || info.Height < 60 || info.Width * info.Height < 40_000) bad.Add($"{Path.GetFileName(file)}: only {info.Width}x{info.Height}");
             else if (info.DistinctColors < 12) bad.Add($"{Path.GetFileName(file)}: blank ({info.DistinctColors} colors)");
         }
         Assert.Empty(bad);

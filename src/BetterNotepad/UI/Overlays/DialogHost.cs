@@ -32,6 +32,9 @@ public sealed class DialogHost : Grid
 
     public bool IsOpen => Visibility == Visibility.Visible;
 
+    /// <summary>A dialog opened or the last one closed (<see cref="IsOpen"/> changed).</summary>
+    public event Action? OpenChanged;
+
     /// <summary>
     /// Shows a dialog; returns the id of the pressed button (cancel / Esc → the cancel button's id or null).
     /// <paramref name="validate"/> runs for every non-cancel button before the dialog closes: false keeps it open
@@ -161,7 +164,11 @@ public sealed class DialogHost : Grid
             Motion.Disappear(card, () =>
             {
                 Children.Remove(card);
-                if (Children.Count <= 1) Visibility = Visibility.Collapsed;
+                if (Children.Count <= 1)
+                {
+                    Visibility = Visibility.Collapsed;
+                    OpenChanged?.Invoke();
+                }
                 previousFocus?.Focus();
             }, sink: 6, ms: 140);
             tcs.TrySetResult(id);
@@ -182,7 +189,9 @@ public sealed class DialogHost : Grid
         }
 
         PreviewKeyDown += OnKey;
+        var opening = Visibility != Visibility.Visible;
         Visibility = Visibility.Visible;
+        if (opening) OpenChanged?.Invoke();
         Motion.Appear(card, rise: 14, fromScale: 0.96, ms: 300);
         _scrim.Opacity = 0;
         _scrim.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(1, TimeSpan.FromMilliseconds(Motion.I.Enabled ? 180 : 0)));

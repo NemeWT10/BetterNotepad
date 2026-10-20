@@ -19,6 +19,13 @@ public sealed partial class SettingsPage
     /// <summary>Changelog per version, newest first; each item is a localization key.</summary>
     private static readonly (string Version, string[] Items)[] WhatsNew =
     [
+        ("0.7.0",
+        [
+            "settings.about.news.070.paste",
+            "settings.about.news.070.html",
+            "settings.about.news.070.images",
+            "settings.about.news.070.csv",
+        ]),
         ("0.6.0",
         [
             "settings.about.news.060.copy",
@@ -56,6 +63,7 @@ public sealed partial class SettingsPage
         ("Markdig", "BSD-2-Clause", "settings.about.lic.markdig"),
         ("PDFium", "BSD-3-Clause / Apache-2.0", "settings.about.lic.pdfium"),
         ("DocumentFormat.OpenXml", "MIT", "settings.about.lic.openxml"),
+        ("Microsoft Edge WebView2 SDK", "BSD-3-Clause", "settings.about.lic.webview2"),
     ];
 
     private static ImageSource? _largeIcon;

@@ -41,6 +41,23 @@ public interface ICompactView
     void EnterCompact();
 }
 
+/// <summary>A view that is not a text editor with something for the status bar (an image: pixel size, file size, zoom).</summary>
+public interface IStatusInfoView
+{
+    /// <summary>Left part ("1920 × 1080 px · 2,4 MB · PNG"), null = nothing.</summary>
+    string? StatusText { get; }
+
+    /// <summary>Zoom on the right ("100%"), null = hidden; clicking it calls <see cref="StatusZoomClicked"/>.</summary>
+    string? StatusZoom { get; }
+
+    string? StatusZoomTip { get; }
+
+    void StatusZoomClicked();
+
+    /// <summary>The texts changed (UI thread).</summary>
+    event Action? StatusChanged;
+}
+
 /// <summary>
 /// A view (or preview) whose rendered content can be dropped while its window waits hidden in the tray: rendered PDF pages,
 /// a Markdown preview document. It rebuilds that content by itself when it is shown again; nothing the user set is lost.

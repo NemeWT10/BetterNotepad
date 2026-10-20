@@ -23,7 +23,7 @@ namespace BetterNotepad.Core;
 /// for every theme it sets up scenarios and renders each window's visual tree with RenderTargetBitmap at 1.25x
 /// into PNG files in &lt;dir&gt;. Run it on a hidden desktop (tools\snapshot.ps1). Writes index.txt (or FAILED.txt) and quits.
 /// </summary>
-internal static class SnapshotMode
+internal static partial class SnapshotMode
 {
     private const double Scale = 1.25;
     private static string _dir = "";
@@ -404,6 +404,14 @@ internal static class SnapshotMode
         //     header's actions, a context menu, inline rename (and its error), a new file, the empty state, a narrow window
         if (Want("22"))
             await Guard("explorer", async () => await ExplorerShots(w, fx));
+
+        // 23. HTML / SVG preview, 24. images, 25. CSV table (Core/SnapshotMode.<Module>.cs)
+        if (Want("23"))
+            await Guard("html", async () => await HtmlShots(w));
+        if (Want("24"))
+            await Guard("images", async () => await ImageShots(w));
+        if (Want("25"))
+            await Guard("csv", async () => await CsvShots(w));
 
         // reference sheets of icon glyphs (picking icons without guessing)
         await Guard("glyphs", async () =>

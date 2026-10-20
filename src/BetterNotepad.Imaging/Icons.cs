@@ -8,7 +8,7 @@ public enum IconKind
 {
     Undo, Redo, Crop, Pen, Highlighter, Line, Arrow, Rectangle, Ellipse, Text, Blur, Pixelate,
     RotateLeft, RotateRight, FlipHorizontal, FlipVertical, Resize, ZoomIn, ZoomOut, Fit, ActualSize,
-    Play, Pause, Edit, Check, Close, Link,
+    Play, Pause, Edit, Check, Close, Link, Info, BrokenImage,
 }
 
 /// <summary>Line icons (20×20 grid, 1.5 px stroke, round caps) drawn for this module, in the app's icon language.</summary>
@@ -49,6 +49,11 @@ internal static class Icons
             IconKind.Check => (P("M4.5 10.5 L8.3 14.3 L15.5 6"), null),
             IconKind.Close => (P("M5.5 5.5 L14.5 14.5 M14.5 5.5 L5.5 14.5"), null),
             IconKind.Link => (P("M8.2 11.8 L11.8 8.2 M9.4 6.2 L10.9 4.7 A2.8 2.8 0 0 1 15.3 9.1 L13.8 10.6 M10.6 13.8 L9.1 15.3 A2.8 2.8 0 0 1 4.7 10.9 L6.2 9.4"), null),
+            // a picture frame torn down the middle (the halves apart), hills and a sun on the left half
+            IconKind.BrokenImage => (P("M9 3.5 H5 A2 2 0 0 0 3 5.5 V14.5 A2 2 0 0 0 5 16.5 H8.6 L7.6 13.4 L9.6 10.6 L8.4 7.2 Z " +
+                                       "M11.6 3.5 H15 A2 2 0 0 1 17 5.5 V14.5 A2 2 0 0 1 15 16.5 H11.2 L10.2 13.4 L12.2 10.6 L11 7.2 Z " +
+                                       "M3.4 13 L6 10.4 L7.9 12.3 M13.2 12.6 L14.6 11.2 L16.6 13.2 M5.8 6.6 V6.7"), null),
+            IconKind.Info => (P("M10 3 A7 7 0 1 0 10 17 A7 7 0 1 0 10 3 Z M10 9.2 V13.8 M10 6.5 V6.6"), null),
             _ => (null, null),
         };
         Cache[kind] = g;

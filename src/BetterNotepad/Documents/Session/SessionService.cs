@@ -413,7 +413,7 @@ public sealed class SessionService
         return m is { Success: true } && int.TryParse(m.Groups[1].Value, out var n) && n > 0 ? n : null;
     }
 
-    private static Document? RestoreDocument(SessionDoc sd)
+    internal static Document? RestoreDocument(SessionDoc sd)
     {
         var hasBackup = sd.HasBackup && BackupStore.Exists(sd.Id);
         if (sd.Path is null)
@@ -437,7 +437,16 @@ public sealed class SessionService
             return doc;
         }
 
-        if (!FileTypes.IsTextual(FileTypes.KindFor(sd.Path)) && !exists) return null;
+        if (!FileTypes.IsTextual(FileTypes.KindFor(sd.Path)) && !exists)
+        {
+            // gone while the app was closed: a non-text document with unsaved changes of its own (an edited image keeps them
+            // in the backup folder) stays, marked deleted on disk — the usual "deleted" question lets the user keep or close it
+            var gone = DocumentManager.I.CreateFor(sd.Path, sd.Id);
+            if (!gone.IsDirty) return null;
+            gone.IsPinned = sd.Pinned;
+            gone.External = ExternalChange.Deleted;
+            return gone;
+        }
 
         var text = new TextDocument(sd.Path, id: sd.Id) { RestoreFromBackup = hasBackup };
         ApplyText(text, sd);

@@ -48,10 +48,14 @@ public sealed class StatusBarView : Grid
         Children.Add(right);
 
         _lock.SetResourceReference(Control.ForegroundProperty, "Brush.Warning");
-        _position.Click += (_, _) => Commands("editor.goToLine");
+        _position.Click += (_, _) => { if (_view is not IStatusInfoView) Commands("editor.goToLine"); };
         _lock.Click += (_, _) => Commands("file.toggleLock");
         _tail.Click += (_, _) => Commands("file.toggleTail");
-        _zoom.Click += (_, _) => Editor.CodeEditor.ResetZoom();
+        _zoom.Click += (_, _) =>
+        {
+            if (_view is IStatusInfoView info) info.StatusZoomClicked();
+            else Editor.CodeEditor.ResetZoom();
+        };
         _language.Click += (_, _) => Commands("editor.changeLanguage");
         _encoding.Click += (_, _) => OpenMenu(_encoding, Windows.MainWindow.Of(this)?.BuildEncodingMenu());
         _eol.Click += (_, _) => OpenMenu(_eol, Windows.MainWindow.Of(this)?.BuildEolMenu());
@@ -102,10 +106,12 @@ public sealed class StatusBarView : Grid
     public void Bind(IDocumentView? view)
     {
         if (_view is TextDocumentView oldText) oldText.CaretMoved -= Refresh;
+        if (_view is IStatusInfoView oldInfo) oldInfo.StatusChanged -= Refresh;
         if (_doc is not null) _doc.PropertyChanged -= OnDocChanged;
         _view = view;
         _doc = view?.Document;
         if (_view is TextDocumentView text) text.CaretMoved += Refresh;
+        if (_view is IStatusInfoView info) info.StatusChanged += Refresh;
         if (_doc is not null) _doc.PropertyChanged += OnDocChanged;
         Refresh();
     }
@@ -128,6 +134,11 @@ public sealed class StatusBarView : Grid
             var pos = Loc.T("status.position", caret.Line, caret.Column);
             if (sel > 0) pos += "  " + Loc.T("status.selected", sel);
             SetText(_position, pos, Loc.T("status.goToLineTip"));
+        }
+        else if (_view is IStatusInfoView info)
+        {
+            // a picture (or another non-text view): its own summary, not line:column
+            SetText(_position, info.StatusText);
         }
         else
         {
@@ -153,7 +164,7 @@ public sealed class StatusBarView : Grid
             SetText(_encoding, null);
             SetText(_eol, null);
             SetText(_language, null);
-            SetText(_zoom, null);
+            SetText(_zoom, (_view as IStatusInfoView)?.StatusZoom, (_view as IStatusInfoView)?.StatusZoomTip);
         }
     }
 }

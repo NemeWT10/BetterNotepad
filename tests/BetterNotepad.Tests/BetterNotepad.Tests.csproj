@@ -34,6 +34,9 @@
     <Compile Include="..\..\src\BetterNotepad\Modules\Explorer\ExplorerRules.cs" Link="Linked\ExplorerRules.cs" />
     <!-- Languages may be split into several partial files by the syntax-definition work. -->
     <Compile Include="..\..\src\BetterNotepad\Editor\Highlighting\Languages*.cs" Link="Linked\%(Filename)%(Extension)" />
+    <!-- CSV / TSV engine (no UI) + the table's dialect override (plain data, no WPF types) -->
+    <Compile Include="..\..\src\BetterNotepad.Tabular\*.cs" Link="Linked\Tabular\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\BetterNotepad.Tabular.Wpf\CsvPreviewLabels.cs" Link="Linked\Tabular\CsvPreviewLabels.cs" />
   </ItemGroup>
 
 </Project>

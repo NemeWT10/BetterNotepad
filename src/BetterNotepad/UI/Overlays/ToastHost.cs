@@ -29,6 +29,9 @@ public sealed class ToastHost : StackPanel
         IsHitTestVisible = true;
     }
 
+    /// <summary>A toast came or went (a native child window under the corner — a WebView2 preview — steps aside meanwhile).</summary>
+    public event Action? Changed;
+
     public void Show(string text, ToastKind kind = ToastKind.Info, string? actionText = null, Action? action = null, double seconds = 2.8)
     {
         while (Children.Count >= MaxToasts) Remove((Border)Children[0]);
@@ -95,6 +98,7 @@ public sealed class ToastHost : StackPanel
         };
         _timers[card] = timer;
         timer.Start();
+        Changed?.Invoke();
     }
 
     /// <summary>Drops every toast at once, timers included, without animation (the window went to the tray or closed).</summary>
@@ -118,6 +122,7 @@ public sealed class ToastHost : StackPanel
     {
         if (_timers.Remove(card, out var timer)) timer.Stop();
         Children.Remove(card);
+        Changed?.Invoke();
     }
 
     private readonly Dictionary<Border, DispatcherTimer> _timers = new();

@@ -392,6 +392,7 @@ public sealed partial class ExplorerPanel
         var folder = target.IsDirectory ? target : target.Parent ?? _tree.Root;
         menu.Items.Add(Item("explorer.newFile", ExplorerLook.NewFileGlyph, () => _ = BeginNewItemAsync(false, folder)));
         menu.Items.Add(Item("explorer.newFolder", ExplorerLook.NewFolderGlyph, () => _ = BeginNewItemAsync(true, folder)));
+        menu.Items.Add(Item("explorer.paste", Glyphs.Paste, () => _ = PasteAsync(folder), "Ctrl+V", ClipboardHasPaste()));
         menu.Items.Add(new Separator());
         if (isRoot)
         {

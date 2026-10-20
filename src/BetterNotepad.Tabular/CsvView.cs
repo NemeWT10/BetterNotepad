@@ -105,6 +105,17 @@ public sealed class CsvView
     /// <summary>Same view definition over another table (typically the table after an edit).</summary>
     public CsvView Rebind(CsvTable table, CancellationToken ct = default) => Create(table, Spec, ct);
 
+    /// <summary>
+    /// The same rows in the same order over <paramref name="table"/>, without sorting or filtering again — for the table
+    /// after cell edits (same records, new values): an edited row stays where the user is looking instead of jumping to its
+    /// new sort position or vanishing from the filter. Falls back to <see cref="Rebind"/> when the record count changed.
+    /// </summary>
+    public CsvView Retain(CsvTable table)
+    {
+        if (table.RowCount != Table.RowCount || table.HeaderRowCount != Table.HeaderRowCount) return Rebind(table);
+        return new CsvView(table, Spec, _order, ResolvedSortMode);
+    }
+
     /// <summary>Another definition over the same table (column sort keys are cached on the table, so re-sorting / re-filtering is cheap).</summary>
     public CsvView With(CsvViewSpec spec, CancellationToken ct = default) => Create(Table, spec, ct);
 

@@ -9,9 +9,9 @@ public sealed partial class ImageViewer
 
     internal double RasterScale => _rasterScale;
 
-    internal bool HasDetail => _detail is not null;
+    internal int ProxySideForTest => ProxySide();
 
-    internal bool HasPicture => _proxy is not null;
+    internal bool HasDetail => _detail is not null;
 
     internal Point ImageToStage(Point image) => ToScreen(image);
 
@@ -34,4 +34,13 @@ public sealed partial class ImageViewer
     internal FrameworkElement ToolbarElement => _toolbar;
 
     internal Task WaitDetailAsync() => _detailTask ?? Task.CompletedTask;
+
+    internal bool CropShown => _crop is not null && _tool == EditTool.Crop;
+
+    internal bool StylePanelOpen => _stylePanel.Visibility == Visibility.Visible;
+
+    internal FrameworkElement ToolbarHost => _toolbarBox;
+
+    /// <summary>Compact: the toolbar as while the pointer is over the picture.</summary>
+    internal void RevealToolbarForTest(bool over) => RevealCompactToolbar(over);
 }

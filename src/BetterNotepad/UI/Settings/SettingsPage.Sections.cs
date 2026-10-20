@@ -165,7 +165,7 @@ public sealed partial class SettingsPage
         {
             var key = kind.ToString().ToLowerInvariant();
             IReadOnlyList<(string, string)> options = kind == DocumentKind.Csv
-                ? [("preview", Loc.T("view.table")), ("edit", Loc.T("view.text"))]
+                ? [("preview", Loc.T("view.table")), ("split", Loc.T("view.split")), ("edit", Loc.T("view.text"))]
                 : [("preview", Loc.T("view.preview")), ("split", Loc.T("view.split")), ("edit", Loc.T("view.edit"))];
             var k = kind;
             views.Add(new SettingRow(glyph, Loc.T("settings.kind." + key), Loc.T("settings.files.viewDesc." + key),
@@ -173,6 +173,14 @@ public sealed partial class SettingsPage
                     () => TextDocument.DefaultViewMode(k).ToString().ToLowerInvariant(),
                     v => f.DefaultViews = new Dictionary<string, string>(f.DefaultViews, StringComparer.OrdinalIgnoreCase) { [key] = v })));
         }
+        BuildHtmlPreview(panel);
+
+        // images: the quality "Save as JPEG" starts from (the dialog asks each time and remembers the answer)
+        var img = Section<BetterNotepad.Modules.Imaging.ImagingSettings>();
+        var images = Group(panel, Loc.T("settings.images.group"));
+        images.Add(new SettingRow(Glyphs.Image, Loc.T("settings.images.jpegQuality"), Loc.T("settings.images.jpegQualityDesc"),
+            Number("images.jpegQuality", 1, 100, Stepper.Presets(50, 60, 70, 75, 80, 85, 90, 92, 95, 98, 100),
+                () => img.JpegQuality, v => img.JpegQuality = (int)v, v => v.ToString("0") + " %", 70)));
     }
 
     private static string Duration(double seconds)

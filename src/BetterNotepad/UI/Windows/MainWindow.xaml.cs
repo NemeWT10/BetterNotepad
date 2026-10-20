@@ -51,6 +51,7 @@ public partial class MainWindow : Window
         ApplyPresentation(); // before the placement: a pinned window has smaller minimum sizes
         ApplyPlacement();
         InitExplorer();
+        InitAirspace();
 
         Model.Groups.CollectionChanged += OnGroupsChanged;
         Model.PropertyChanged += OnModelChanged;
@@ -514,6 +515,12 @@ public partial class MainWindow : Window
             if (explorer.IsEditingName && chord.Modifiers == ModifierKeys.None) return;
         }
 
+        // a focused page (HTML preview) answers a few shortcuts itself first, e.g. find = the page's own find bar
+        if (FocusedContentKey?.Invoke(this, chord) == true)
+        {
+            e.Handled = true;
+            return;
+        }
         var ctx = Context();
         var cmd = Keymap.Match(chord, ctx);
         if (cmd is null) return;

@@ -14,5 +14,8 @@ public static class ModuleLoader
         Pdf.PdfModule.Register(); // pages, thumbnails, zoom, search, copy, print, PDF -> Word
         Info.InfoModule.Register(); // binary files as hex, everything else non-viewable as an Info tab (size, hashes, metadata)
         Sys.SystemModule.Register(); // tray, hotkey, autostart, file types, install, updates
+        Html.HtmlModule.Register(); // HTML / SVG live preview (WebView2, lazy)
+        Imaging.ImagingModule.Register(); // image viewer + simple editing
+        Csv.CsvModule.Register(); // CSV / TSV as a table
     }
 }

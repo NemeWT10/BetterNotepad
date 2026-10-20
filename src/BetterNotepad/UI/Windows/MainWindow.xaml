@@ -124,7 +124,7 @@
         <c:StatusBarView x:Name="Status" Grid.Row="2"/>
 
         <!-- ───── overlays ───── -->
-        <Grid x:Name="OverlayLayer" Grid.Row="1" Grid.RowSpan="2"/>
+        <ui:OverlayLayerPanel x:Name="OverlayLayer" Grid.Row="1" Grid.RowSpan="2"/>
         <ui:DialogHost x:Name="Dialogs" Grid.RowSpan="3"/>
     </Grid>
     </Border>

@@ -14,6 +14,7 @@ public sealed class ImagingLabels
     public string Pause { get; init; } = "Pause";
     public string Edit { get; init; } = "Edit";
     public string Done { get; init; } = "Done";
+    public string Info { get; init; } = "Image info and metadata";
 
     // tools
     public string Crop { get; init; } = "Crop";
@@ -54,6 +55,9 @@ public sealed class ImagingLabels
     public string Copied { get; init; } = "Copied";
     public string Loading { get; init; } = "Opening image…";
     public string LoadFailed { get; init; } = "This image could not be opened.";
+
+    /// <summary>"{0}" = the format (WEBP…): Windows has no decoder for it.</summary>
+    public string CodecMissing { get; init; } = "Windows has no decoder for {0} images. Install the matching image extension from the Microsoft Store to open this file.";
     public string TextHint { get; init; } = "Type, Enter to finish";
 
     /// <summary>"{0} × {1}" — pixel size in the info pill.</summary>
@@ -79,4 +83,13 @@ public sealed class ImagingOptions
 
     /// <summary>JPEG quality used by <see cref="ImageViewer.SaveAsync"/> (1..100).</summary>
     public int JpegQuality { get; set; } = 92;
+
+    /// <summary>An "info" button on the view toolbar (raises <see cref="ImageViewer.InfoRequested"/>).</summary>
+    public bool ShowInfoButton { get; set; }
+
+    /// <summary>Puts the copied picture on the clipboard (default: the system clipboard; an app in test mode keeps it to itself).</summary>
+    public Action<System.Windows.IDataObject>? SetClipboard { get; set; }
+
+    /// <summary>Fills the context menu instead of the built-in items (the app's own icons and commands).</summary>
+    public Action<System.Windows.Controls.ContextMenu>? BuildContextMenu { get; set; }
 }

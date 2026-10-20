@@ -35,7 +35,8 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private static readonly double[] TextDip = [16, 24, 38];
 
     private readonly ImagingOptions _options;
-    private readonly ImagingLabels _l;
+    private ImagingLabels _l;
+    private readonly List<(ToolButton Button, Func<ImagingLabels, string> Text, string? Keys)> _tips = [];
 
     // layers
     private readonly Grid _root = new();
@@ -50,7 +51,18 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private readonly Border _textFrame = new();
     private readonly Border _infoPill;
     private readonly TextBlock _infoText = new() { FontSize = 11.5 };
-    private readonly TextBlock _message = new() { FontSize = 13, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+    private readonly TextBlock _message = new()
+    {
+        FontSize = 13, HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center,
+        MaxWidth = 440, LineHeight = 19,
+    };
+    private readonly StackPanel _messagePanel = new()
+    {
+        HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(24), Visibility = Visibility.Collapsed,
+    };
+    private readonly Border _failTile = new() { Width = 60, Height = 60, CornerRadius = new CornerRadius(20), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 16) };
+    private Button? _failInfo;
+    private Func<ImagingLabels, string>? _messageText;
 
     // toolbar
     private readonly Border _toolbar;
@@ -60,6 +72,11 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private readonly TextBlock _zoomLabel = new() { FontSize = 12, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center };
     private readonly ToolButton _playButton;
     private readonly Border _playSeparatorHost = new();
+    private readonly ToolButton _infoButton;
+    private readonly ToolButton _editButton;
+    private readonly ToolButton _rotateButton;
+    private readonly FrameworkElement _editSeparator;
+    private readonly Viewbox _toolbarBox;
     private readonly Dictionary<EditTool, ToolButton> _toolButtons = new();
     private readonly ToolButton _styleButton;
     private readonly Ellipse _styleDot = new() { Width = 16, Height = 16, StrokeThickness = 1.5 };
@@ -73,11 +90,14 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private TextBox? _resizeW;
     private TextBox? _resizeH;
     private ToolButton? _resizeLink;
+    private readonly List<(TextBlock Text, Func<ImagingLabels, string> Label)> _panelTexts = [];
+    private Button? _resizeApply;
     private bool _resizeSync;
     private readonly List<System.Windows.Media.Effects.DropShadowEffect> _effects = [];
 
     // picture
     private string? _path;
+    private string? _source;
     private ImageInfo? _info;
     private Composer.State? _proxy;
     private Composer.State? _detail;
@@ -87,7 +107,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private bool _released;
     private CancellationTokenSource? _loadCts;
     private Task? _detailTask;
-    private readonly EditDocument _doc = new();
+    private readonly EditDocument _doc;
     private readonly Checkpoints _checkpoints = new();
     private Size _logical;
     private double _rasterScale = 1;
@@ -100,8 +120,11 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private bool _animating;
     private bool _fit = true;
     private Window? _window;
+    private int _shownZoom = -1;
 
     // interaction
+    private bool _compact;
+    private bool _readOnly;
     private bool _editing;
     private EditTool _tool;
     private Color _color = PaletteColors[0];
@@ -120,10 +143,12 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     private Point? _textOrigin;
     private bool _disposed;
 
-    public ImageViewer(ImagingOptions? options = null)
+    /// <param name="edits">The edit list to show and change — pass the same one to every viewer of one picture (a split view).</param>
+    public ImageViewer(ImagingOptions? options = null, EditDocument? edits = null)
     {
         _options = options ?? new ImagingOptions();
         _l = _options.Labels;
+        _doc = edits ?? new EditDocument();
         Anim.Enabled = _options.AnimationsEnabled;
         Focusable = true;
         FocusVisualStyle = null;
@@ -162,10 +187,8 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         _stage.Children.Add(_textFrame);
 
         // crop confirm chip
-        var applyCrop = new ToolButton(IconKind.Check, _l.ApplyCrop, "Enter");
-        applyCrop.Click += (_, _) => ApplyCrop();
-        var cancelCrop = new ToolButton(IconKind.Close, _l.CancelCrop, "Esc");
-        cancelCrop.Click += (_, _) => CancelCrop();
+        var applyCrop = Btn(IconKind.Check, l => l.ApplyCrop, "Enter", ApplyCrop);
+        var cancelCrop = Btn(IconKind.Close, l => l.CancelCrop, "Esc", CancelCrop);
         var chipRow = new StackPanel { Orientation = Orientation.Horizontal };
         chipRow.Children.Add(applyCrop);
         chipRow.Children.Add(cancelCrop);
@@ -184,52 +207,71 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         _infoPill.IsHitTestVisible = false;
         _infoPill.Visibility = Visibility.Collapsed;
         _root.Children.Add(_infoPill);
+        // no picture: the reason, with a broken-picture badge and (when the app has one) the file's info
         _message.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextDim");
-        _root.Children.Add(_message);
+        _failTile.SetResourceReference(Border.BackgroundProperty, "Brush.AccentSoft");
+        var failIcon = new IconPath { Kind = IconKind.BrokenImage, Width = 28, Height = 28 };
+        failIcon.SetResourceReference(IconPath.ForegroundProperty, "Brush.AccentText");
+        _failTile.Child = failIcon;
+        _messagePanel.Children.Add(_failTile);
+        _messagePanel.Children.Add(_message);
+        if (_options.ShowInfoButton)
+        {
+            _failInfo = Ui.Secondary(_l.Info, () => InfoRequested?.Invoke());
+            _failInfo.HorizontalAlignment = HorizontalAlignment.Center;
+            _failInfo.Margin = new Thickness(0, 18, 0, 0);
+            _messagePanel.Children.Add(_failInfo);
+        }
+        _root.Children.Add(_messagePanel);
 
         // view toolbar
-        var zoomOut = Btn(IconKind.ZoomOut, _l.ZoomOut, "−", () => ZoomBy(1 / 1.25));
-        _zoomText = new ToolButton(IconKind.Fit, _l.ZoomLevel) { Width = 58, Content = _zoomLabel };
-        _zoomText.Click += (_, _) => ZoomToActual();
-        var zoomIn = Btn(IconKind.ZoomIn, _l.ZoomIn, "+", () => ZoomBy(1.25));
-        var fit = Btn(IconKind.Fit, _l.Fit, "0", () => ZoomToFit());
-        var rotate = Btn(IconKind.RotateRight, _l.Rotate, "R", () => Rotate(1));
-        _playButton = Btn(IconKind.Pause, _l.Pause, null, TogglePlay);
-        var edit = Btn(IconKind.Edit, _l.Edit, "E", BeginEdit);
+        var zoomOut = Btn(IconKind.ZoomOut, l => l.ZoomOut, "−", () => ZoomBy(1 / 1.25));
+        _zoomText = Btn(IconKind.Fit, l => l.ZoomLevel, "1", ZoomToActual);
+        _zoomText.Width = 58;
+        _zoomText.Content = _zoomLabel;
+        var zoomIn = Btn(IconKind.ZoomIn, l => l.ZoomIn, "+", () => ZoomBy(1.25));
+        var fit = Btn(IconKind.Fit, l => l.Fit, "0", () => ZoomToFit());
+        var rotate = _rotateButton = Btn(IconKind.RotateRight, l => l.Rotate, "R", () => Rotate(1));
+        _playButton = Btn(IconKind.Pause, l => _playing ? l.Pause : l.Play, null, TogglePlay);
+        _infoButton = Btn(IconKind.Info, l => l.Info, "I", () => InfoRequested?.Invoke(), toggles: true);
+        _infoButton.Visibility = _options.ShowInfoButton ? Visibility.Visible : Visibility.Collapsed;
+        _editButton = Btn(IconKind.Edit, l => l.Edit, "E", BeginEdit);
         foreach (var e in new UIElement[] { zoomOut, _zoomText, zoomIn, Ui.VSeparator(), fit, rotate }) _viewBar.Children.Add(e);
         _playSeparatorHost.Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { Ui.VSeparator(), _playButton } };
         _viewBar.Children.Add(_playSeparatorHost);
-        _viewBar.Children.Add(Ui.VSeparator());
-        _viewBar.Children.Add(edit);
+        _editSeparator = Ui.VSeparator();
+        _viewBar.Children.Add(_editSeparator);
+        _viewBar.Children.Add(_infoButton);
+        _viewBar.Children.Add(_editButton);
 
         // edit toolbar
-        _undoButton = Btn(IconKind.Undo, _l.Undo, "Ctrl+Z", Undo);
-        _redoButton = Btn(IconKind.Redo, _l.Redo, "Ctrl+Y", Redo);
+        _undoButton = Btn(IconKind.Undo, l => l.Undo, "Ctrl+Z", Undo);
+        _redoButton = Btn(IconKind.Redo, l => l.Redo, "Ctrl+Y", Redo);
         _styleDot.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "Brush.PanelBorder");
-        _styleButton = new ToolButton(IconKind.Check, _l.ColorAndSize) { Content = _styleDot };
-        _styleButton.Click += (_, _) => TogglePanel(_stylePanel!, _styleButton);
-        _resizeButton = Btn(IconKind.Resize, _l.Resize, null, () => TogglePanel(_resizePanel!, _resizeButton!));
-        var done = Btn(IconKind.Check, _l.Done, "Esc", EndEdit);
+        _styleButton = Btn(IconKind.Check, l => l.ColorAndSize, null, () => TogglePanel(_stylePanel!, _styleButton!));
+        _styleButton.Content = _styleDot;
+        _resizeButton = Btn(IconKind.Resize, l => l.Resize, null, () => TogglePanel(_resizePanel!, _resizeButton!));
+        var done = Btn(IconKind.Check, l => l.Done, "Esc", EndEdit);
         _editBar.Children.Add(_undoButton);
         _editBar.Children.Add(_redoButton);
         _editBar.Children.Add(Ui.VSeparator());
-        _editBar.Children.Add(ToolBtn(EditTool.Crop, IconKind.Crop, _l.Crop, "C"));
+        _editBar.Children.Add(ToolBtn(EditTool.Crop, IconKind.Crop, l => l.Crop, "C"));
         _editBar.Children.Add(Ui.VSeparator());
-        _editBar.Children.Add(ToolBtn(EditTool.Pen, IconKind.Pen, _l.Pen, "P"));
-        _editBar.Children.Add(ToolBtn(EditTool.Highlighter, IconKind.Highlighter, _l.Highlighter, "H"));
-        _editBar.Children.Add(ToolBtn(EditTool.Line, IconKind.Line, _l.Line, "L"));
-        _editBar.Children.Add(ToolBtn(EditTool.Arrow, IconKind.Arrow, _l.Arrow, "A"));
-        _editBar.Children.Add(ToolBtn(EditTool.Rectangle, IconKind.Rectangle, _l.Rectangle, "R"));
-        _editBar.Children.Add(ToolBtn(EditTool.Ellipse, IconKind.Ellipse, _l.Ellipse, "O"));
-        _editBar.Children.Add(ToolBtn(EditTool.Text, IconKind.Text, _l.Text, "T"));
-        _editBar.Children.Add(ToolBtn(EditTool.Blur, IconKind.Blur, _l.Blur, "B"));
-        _editBar.Children.Add(ToolBtn(EditTool.Pixelate, IconKind.Pixelate, _l.Pixelate, "X"));
+        _editBar.Children.Add(ToolBtn(EditTool.Pen, IconKind.Pen, l => l.Pen, "P"));
+        _editBar.Children.Add(ToolBtn(EditTool.Highlighter, IconKind.Highlighter, l => l.Highlighter, "H"));
+        _editBar.Children.Add(ToolBtn(EditTool.Line, IconKind.Line, l => l.Line, "L"));
+        _editBar.Children.Add(ToolBtn(EditTool.Arrow, IconKind.Arrow, l => l.Arrow, "A"));
+        _editBar.Children.Add(ToolBtn(EditTool.Rectangle, IconKind.Rectangle, l => l.Rectangle, "R"));
+        _editBar.Children.Add(ToolBtn(EditTool.Ellipse, IconKind.Ellipse, l => l.Ellipse, "O"));
+        _editBar.Children.Add(ToolBtn(EditTool.Text, IconKind.Text, l => l.Text, "T"));
+        _editBar.Children.Add(ToolBtn(EditTool.Blur, IconKind.Blur, l => l.Blur, "B"));
+        _editBar.Children.Add(ToolBtn(EditTool.Pixelate, IconKind.Pixelate, l => l.Pixelate, "X"));
         _editBar.Children.Add(_styleButton);
         _editBar.Children.Add(Ui.VSeparator());
-        _editBar.Children.Add(Btn(IconKind.RotateLeft, _l.RotateLeft, "Shift+R", () => Rotate(-1)));
-        _editBar.Children.Add(Btn(IconKind.RotateRight, _l.RotateRight, null, () => Rotate(1)));
-        _editBar.Children.Add(Btn(IconKind.FlipHorizontal, _l.FlipHorizontal, null, () => _doc.Push(new FlipOp(true))));
-        _editBar.Children.Add(Btn(IconKind.FlipVertical, _l.FlipVertical, null, () => _doc.Push(new FlipOp(false))));
+        _editBar.Children.Add(Btn(IconKind.RotateLeft, l => l.RotateLeft, "Shift+R", () => Rotate(-1)));
+        _editBar.Children.Add(Btn(IconKind.RotateRight, l => l.RotateRight, null, () => Rotate(1)));
+        _editBar.Children.Add(Btn(IconKind.FlipHorizontal, l => l.FlipHorizontal, null, () => _doc.Push(new FlipOp(true))));
+        _editBar.Children.Add(Btn(IconKind.FlipVertical, l => l.FlipVertical, null, () => _doc.Push(new FlipOp(false))));
         _editBar.Children.Add(_resizeButton);
         _editBar.Children.Add(Ui.VSeparator());
         _editBar.Children.Add(done);
@@ -240,8 +282,10 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         bars.Children.Add(_editBar);
         _toolbar = Ui.Panel(bars, 14, new Thickness(4));
         _toolbar.Effect = Shadow(28, 8, 0.45);
-        var box = new Viewbox { Child = _toolbar, StretchDirection = StretchDirection.DownOnly, Margin = new Thickness(12, 0, 12, 14), VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Center };
-        _root.Children.Add(box);
+        _toolbarBox = new Viewbox { Child = _toolbar, StretchDirection = StretchDirection.DownOnly, Margin = new Thickness(12, 0, 12, 14), VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Center };
+        _root.Children.Add(_toolbarBox);
+        MouseEnter += (_, _) => RevealCompactToolbar(true);
+        MouseLeave += (_, _) => RevealCompactToolbar(false);
 
         _stylePanel = BuildStylePanel();
         _resizePanel = BuildResizePanel();
@@ -310,19 +354,95 @@ public sealed partial class ImageViewer : UserControl, IDisposable
 
     public event Action<Exception>? LoadFailed;
 
+    /// <summary>The info button (<see cref="ImagingOptions.ShowInfoButton"/>), the I key.</summary>
+    public event Action? InfoRequested;
+
+    /// <summary>Something the status line shows changed: a picture was decoded, its size, the zoom (whole percent), edit mode.</summary>
+    public event Action? StateChanged;
+
+    /// <summary>The edit list shown (shared with other viewers of the same picture).</summary>
+    public EditDocument EditList => _doc;
+
+    /// <summary>
+    /// The file the pixels come from: the opened file, or a copy of it as it was when editing began (the edits stay valid
+    /// when another program changes the file meanwhile). Setting it does not decode again — it must hold the same picture.
+    /// </summary>
+    public string? SourcePath
+    {
+        get => _source ?? _path;
+        set => _source = value;
+    }
+
+    private string? DecodePath => _source ?? _path;
+
+    /// <summary>Pinned on top: no editing, the view toolbar only while the pointer is over the picture.</summary>
+    public bool Compact
+    {
+        get => _compact;
+        set
+        {
+            if (_compact == value) return;
+            _compact = value;
+            if (value) EndEdit();
+            UpdateEditAvailability();
+            RevealCompactToolbar(IsMouseOver);
+            OnStageSized(); // the viewport grew (or shrank) by the toolbar's room
+        }
+    }
+
+    /// <summary>A locked (read-only) tab: no editing and no rotating — the picture can only be looked at.</summary>
+    public bool ReadOnly
+    {
+        get => _readOnly;
+        set
+        {
+            if (_readOnly == value) return;
+            _readOnly = value;
+            if (value) EndEdit();
+            UpdateEditAvailability();
+        }
+    }
+
+    private void UpdateEditAvailability()
+    {
+        var edit = !_compact && !_readOnly;
+        _editButton.Visibility = edit ? Visibility.Visible : Visibility.Collapsed;
+        _rotateButton.Visibility = _readOnly ? Visibility.Collapsed : Visibility.Visible;
+        _infoButton.Visibility = !_compact && _options.ShowInfoButton ? Visibility.Visible : Visibility.Collapsed;
+        _editSeparator.Visibility = edit || _infoButton.Visibility == Visibility.Visible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>The app shows its info panel: the info button stays lit.</summary>
+    public bool InfoOpen
+    {
+        get => _infoButton.IsChecked == true;
+        set => _infoButton.IsChecked = value;
+    }
+
     /// <summary>Opens a file (discarding edits). Decodes off the UI thread at display size.</summary>
     public async Task LoadAsync(string path)
     {
-        _path = path;
         _doc.Reset();
+        await OpenAsync(path);
+    }
+
+    /// <summary>
+    /// Shows <paramref name="path"/> with the current edit list (a shared document, edits restored after a restart):
+    /// pixels from <paramref name="source"/> when given (see <see cref="SourcePath"/>). <paramref name="refit"/> false keeps the
+    /// zoom (the same picture read again).
+    /// </summary>
+    public async Task OpenAsync(string path, string? source = null, bool refit = true)
+    {
+        _path = path;
+        _source = source;
         _checkpoints.Clear();
         CancelCrop();
-        await DecodeBaseAsync(refit: true);
+        await DecodeBaseAsync(refit);
     }
 
     public void BeginEdit()
     {
-        if (_editing || _proxy is null) return;
+        if (_editing || _proxy is null || _compact || _readOnly) return;
         _editing = true;
         StopGif();
         if (_gif is not null) Recompose();
@@ -333,6 +453,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         UpdateInfo();
         Focus();
         EditingChanged?.Invoke();
+        StateChanged?.Invoke();
     }
 
     public void EndEdit()
@@ -349,6 +470,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         UpdateInfo();
         UpdatePlayback();
         EditingChanged?.Invoke();
+        StateChanged?.Invoke();
     }
 
     public void SetTool(EditTool tool)
@@ -368,15 +490,22 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         _overlay.InvalidateVisual();
     }
 
-    public void Rotate(int quarters) => _doc.Push(new RotateOp(quarters));
+    public void Rotate(int quarters)
+    {
+        if (_readOnly || _proxy is null) return;
+        _doc.Push(new RotateOp(quarters));
+    }
 
     public void Undo()
     {
         CommitText();
-        _doc.Undo();
+        if (!_readOnly) _doc.Undo();
     }
 
-    public void Redo() => _doc.Redo();
+    public void Redo()
+    {
+        if (!_readOnly) _doc.Redo();
+    }
 
     public void ZoomToFit(bool animate = true)
     {
@@ -393,35 +522,20 @@ public sealed partial class ImageViewer : UserControl, IDisposable
     /// <summary>The edited picture at full resolution (decoded from the file again, edits applied off the UI thread).</summary>
     public async Task<BitmapSource?> RenderResultAsync()
     {
-        if (_path is null) return null;
-        var path = _path;
-        var ops = _doc.Ops.ToList();
-        return await Sta.Run(() =>
-        {
-            var d = ImageLoader.Decode(path, 0);
-            var bmp = Composer.Flatten(new Composer.State(d.Image, 1, d.Screen), ops);
-            if (!bmp.IsFrozen) bmp.Freeze();
-            return bmp;
-        });
+        if (DecodePath is not { } path) return null;
+        CommitText();
+        return await ImageExport.RenderAsync(path, _doc.Ops);
     }
 
     /// <summary>Writes the edited picture to <paramref name="path"/> (format from the extension unless given). Saving over the
     /// open file bakes the edits in and reopens it (the edit list starts empty).</summary>
     public async Task SaveAsync(string path, ImageFileFormat? format = null)
     {
-        if (_path is null) return;
+        if (DecodePath is not { } source || _path is null) return;
         CommitText();
-        var source = _path;
-        var ops = _doc.Ops.ToList();
         var fmt = format ?? ImageCodecs.FromExtension(path) ?? ImageFileFormat.Png;
-        var quality = _options.JpegQuality;
-        await Sta.Run(() =>
-        {
-            var d = ImageLoader.Decode(source, 0);
-            ImageCodecs.Save(Composer.Flatten(new Composer.State(d.Image, 1, d.Screen), ops), path, fmt, quality);
-            return true;
-        });
-        if (string.Equals(System.IO.Path.GetFullPath(path), System.IO.Path.GetFullPath(source), StringComparison.OrdinalIgnoreCase))
+        await ImageExport.SaveAsync(source, _doc.Ops, path, fmt, _options.JpegQuality);
+        if (string.Equals(System.IO.Path.GetFullPath(path), System.IO.Path.GetFullPath(_path), StringComparison.OrdinalIgnoreCase))
         {
             var wasEditing = _editing;
             await LoadAsync(path);
@@ -442,6 +556,12 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         enc.Save(png);
         png.Position = 0;
         data.SetData("PNG", png, false);
+        if (_options.SetClipboard is { } sink)
+        {
+            sink(data);
+            Copied?.Invoke();
+            return;
+        }
         try
         {
             Clipboard.SetDataObject(data, true);
@@ -466,8 +586,30 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         _detail = null;
         _checkpoints.Clear();
         _image.Source = null;
+        _shapes.Shapes = [];
         _released = _path is not null;
     }
+
+    /// <summary>
+    /// The picture as decoded, before any edit, at its full pixel size (frozen) — for keeping it when the file is gone. When only
+    /// the display-size copy is in memory it is scaled up, so the edits (in image pixels) still land where they were drawn.
+    /// </summary>
+    public BitmapSource? CaptureBase()
+    {
+        var st = _detail ?? _proxy;
+        if (st is null) return null;
+        var w = Math.Max(1, (int)Math.Round(st.Logical.Width));
+        var h = Math.Max(1, (int)Math.Round(st.Logical.Height));
+        var b = st.Raster.PixelWidth == w && st.Raster.PixelHeight == h ? st.Raster : Composer.Scale(st.Raster, w, h);
+        if (!b.IsFrozen) b.Freeze();
+        return b;
+    }
+
+    /// <summary>The decoded picture was dropped (<see cref="ReleaseContent"/>) and comes back when the viewer is shown.</summary>
+    public bool IsReleased => _released;
+
+    /// <summary>A picture is decoded and shown.</summary>
+    public bool HasPicture => _proxy is not null;
 
     public void Dispose()
     {
@@ -496,18 +638,18 @@ public sealed partial class ImageViewer : UserControl, IDisposable
 
     private async Task DecodeBaseAsync(bool refit)
     {
-        if (_path is null) return;
+        if (DecodePath is not { } path || _path is null) return;
         _loadCts?.Cancel();
         var cts = _loadCts = new CancellationTokenSource();
         StopGif();
         _gif = null;
         _detail = null;
         _detailTask = null;
-        ShowMessage(_l.Loading, delayed: true);
+        ShowMessage(l => l.Loading, delayed: true);
         Decoded d;
         try
         {
-            d = await ImageLoader.DecodeAsync(_path, ProxySide(), cts.Token);
+            d = await ImageLoader.DecodeAsync(path, ProxySide(), cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -518,8 +660,17 @@ public sealed partial class ImageViewer : UserControl, IDisposable
             if (cts != _loadCts) return;
             _proxy = null;
             _image.Source = null;
-            ShowMessage(_l.LoadFailed, delayed: false);
+            _shapes.Shapes = [];
+            _shapes.InvalidateVisual();
+            _released = false;
+            // a WebP without the codec is not a broken file: say what is missing
+            var ext = System.IO.Path.GetExtension(_path);
+            if (ImageCodecs.IsMissingCodec(ex) && string.Equals(ext, ".webp", StringComparison.OrdinalIgnoreCase))
+                ShowMessage(l => string.Format(System.Globalization.CultureInfo.CurrentCulture, l.CodecMissing, "WebP"), delayed: false, failure: true);
+            else
+                ShowMessage(l => l.LoadFailed, delayed: false, failure: true);
             LoadFailed?.Invoke(ex);
+            StateChanged?.Invoke();
             return;
         }
         if (cts != _loadCts || _disposed) return;
@@ -535,15 +686,15 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         if (refit || _fit) ZoomToFit(animate: false);
         UpdateInfo();
         UpdatePlayback();
+        StateChanged?.Invoke();
     }
 
     /// <summary>Zoomed past the proxy's resolution: decode the full picture once (dropped again on fit).</summary>
     private void EnsureDetail()
     {
-        if (_proxy is null || _detail is not null || _detailTask is not null || _path is null) return;
+        if (_proxy is null || _detail is not null || _detailTask is not null || DecodePath is not { } path) return;
         if (_proxy.Scale >= 0.999 || _gif is not null) return;
         if (_zoom * Dpi <= _rasterScale * 1.15) return;
-        var path = _path;
         var cts = _loadCts;
         _detailTask = Run();
 
@@ -552,7 +703,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
             try
             {
                 var d = await ImageLoader.DecodeAsync(path, 0, cts?.Token ?? default);
-                if (path != _path || cts != _loadCts || _disposed) return;
+                if (path != DecodePath || cts != _loadCts || _disposed) return;
                 _detail = new Composer.State(d.Image, 1, d.Screen);
                 _checkpoints.Clear();
                 Recompose();
@@ -593,6 +744,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
             ZoomToFit(animate: true);
         }
         ModifiedChanged?.Invoke();
+        StateChanged?.Invoke();
     }
 
     private void Recompose()
@@ -622,7 +774,8 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         {
             var w = _stage.ActualWidth;
             var h = _stage.ActualHeight;
-            var bottom = _toolbar.ActualHeight > 0 ? _toolbar.ActualHeight + 26 : 64;
+            // the floating toolbar keeps the picture clear of it (compact: it only shows over the picture while pointed at)
+            var bottom = _compact ? 18 : _toolbar.ActualHeight > 0 ? _toolbar.ActualHeight + 26 : 64;
             return new Rect(18, 18, Math.Max(10, w - 36), Math.Max(10, h - 18 - bottom));
         }
     }
@@ -728,10 +881,41 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         // magnified pixels stay crisp; scaled-down photos use the smooth filter
         var devicePerRaster = _zoom * Dpi / Math.Max(1e-6, _rasterScale);
         RenderOptions.SetBitmapScalingMode(_image, devicePerRaster >= 2.5 ? BitmapScalingMode.NearestNeighbor : BitmapScalingMode.HighQuality);
-        _zoomLabel.Text = $"{Math.Round(ZoomPercent):0} %";
+        var shown = (int)Math.Round(ZoomPercent);
+        _zoomLabel.Text = $"{shown}%";
         if (_crop is not null) PlaceCropChip();
         if (_textOrigin is { } o) PlaceText(o);
         _overlay.InvalidateVisual();
+        if (shown != _shownZoom)
+        {
+            _shownZoom = shown;
+            StateChanged?.Invoke();
+        }
+    }
+
+    /// <summary>The picture fills the view (fit) rather than a chosen zoom.</summary>
+    public bool IsFit => _fit;
+
+    // ───────────── compact (pinned) toolbar: only while the pointer is over the picture ─────────────
+
+    private void RevealCompactToolbar(bool over)
+    {
+        if (!_compact)
+        {
+            _toolbarBox.BeginAnimation(OpacityProperty, null);
+            _toolbarBox.Opacity = 1;
+            _toolbarBox.IsHitTestVisible = true;
+            return;
+        }
+        _toolbarBox.IsHitTestVisible = over;
+        if (!Anim.Enabled() || !IsVisible)
+        {
+            _toolbarBox.BeginAnimation(OpacityProperty, null);
+            _toolbarBox.Opacity = over ? 1 : 0;
+            return;
+        }
+        var a = new System.Windows.Media.Animation.DoubleAnimation(over ? 1 : 0, TimeSpan.FromMilliseconds(over ? 180 : 260)) { EasingFunction = Anim.EaseOut };
+        _toolbarBox.BeginAnimation(OpacityProperty, a);
     }
 
     private Point ToImage(Point screen) => new((screen.X - _ox) / _zoom, (screen.Y - _oy) / _zoom);
@@ -757,6 +941,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
             (_ox, _oy) = (x, y);
             ApplyTransform();
         }
+        EnsureDetail(); // a bigger window can need more pixels than the display-size copy has
     }
 
     // ───────────── GIF playback (only while visible) ─────────────
@@ -803,6 +988,9 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         _playButton.ToolTip = Ui.Tip(_playing ? _l.Pause : _l.Play, null);
     }
 
+    /// <summary>Animated picture: plays (true) or is paused by the user.</summary>
+    public bool IsPlaying => _playing;
+
     private void StopGif() => _gif?.Stop();
 
     private void TogglePlay()
@@ -813,19 +1001,38 @@ public sealed partial class ImageViewer : UserControl, IDisposable
 
     // ───────────── toolbar bits ─────────────
 
-    private ToolButton Btn(IconKind icon, string tip, string? keys, Action click)
+    private ToolButton Btn(IconKind icon, Func<ImagingLabels, string> tip, string? keys, Action click, bool toggles = false)
     {
-        var b = new ToolButton(icon, tip, keys);
+        var b = new ToolButton(icon, tip(_l), keys, toggles);
         b.Click += (_, _) => click();
+        _tips.Add((b, tip, keys));
         return b;
     }
 
-    private ToolButton ToolBtn(EditTool tool, IconKind icon, string tip, string keys)
+    private ToolButton ToolBtn(EditTool tool, IconKind icon, Func<ImagingLabels, string> tip, string keys)
     {
-        var b = new ToolButton(icon, tip, keys, toggles: true);
+        var b = new ToolButton(icon, tip(_l), keys, toggles: true);
         b.Click += (_, _) => SetTool(b.IsChecked == true ? tool : EditTool.None);
         _toolButtons[tool] = b;
+        _tips.Add((b, tip, keys));
         return b;
+    }
+
+    /// <summary>The UI language changed: every tooltip, panel label and message in the new texts.</summary>
+    public void SetLabels(ImagingLabels labels)
+    {
+        _l = labels;
+        _options.Labels = labels;
+        foreach (var (button, text, keys) in _tips) button.ToolTip = Ui.Tip(text(labels), keys);
+        foreach (var (block, label) in _panelTexts) block.Text = label(labels);
+        if (_resizeApply is not null) _resizeApply.Content = labels.Apply;
+        if (_resizeLink is not null) _resizeLink.ToolTip = Ui.Tip(labels.KeepRatio, null);
+        var names = new[] { labels.Thin, labels.Medium, labels.Thick };
+        for (var i = 0; i < _sizeChips.Count && i < names.Length; i++) _sizeChips[i].ToolTip = names[i];
+        if (_messageText is not null) _message.Text = _messageText(labels);
+        if (_failInfo is not null) _failInfo.Content = labels.Info;
+        UpdateInfo();
+        _overlay.InvalidateVisual();
     }
 
     private void UpdateToolbarState()
@@ -926,18 +1133,21 @@ public sealed partial class ImageViewer : UserControl, IDisposable
             Grid.SetColumn(e, c);
             grid.Children.Add(e);
         }
-        var lw = Ui.Label(_l.Width, 12, dim: true);
-        lw.Margin = new Thickness(0, 0, 12, 0);
-        var lh = Ui.Label(_l.Height, 12, dim: true);
-        lh.Margin = new Thickness(0, 0, 12, 0);
-        Put(lw, 0, 0);
+        TextBlock Label(Func<ImagingLabels, string> text, double size, Thickness margin)
+        {
+            var t = Ui.Label(text(_l), size, dim: true);
+            t.Margin = margin;
+            _panelTexts.Add((t, text));
+            return t;
+        }
+        Put(Label(l => l.Width, 12, new Thickness(0, 0, 12, 0)), 0, 0);
         Put(_resizeW, 0, 1);
-        Put(Ui.Label(_l.Pixels, 11.5, dim: true).With(t => t.Margin = new Thickness(8, 0, 0, 0)), 0, 2);
+        Put(Label(l => l.Pixels, 11.5, new Thickness(8, 0, 0, 0)), 0, 2);
         Put(_resizeLink.With(b => { b.Margin = new Thickness(0, 2, 0, 2); b.HorizontalAlignment = HorizontalAlignment.Center; }), 1, 1);
-        Put(lh, 2, 0);
+        Put(Label(l => l.Height, 12, new Thickness(0, 0, 12, 0)), 2, 0);
         Put(_resizeH, 2, 1);
-        Put(Ui.Label(_l.Pixels, 11.5, dim: true).With(t => t.Margin = new Thickness(8, 0, 0, 0)), 2, 2);
-        var apply = Ui.Primary(_l.Apply, ApplyResize);
+        Put(Label(l => l.Pixels, 11.5, new Thickness(8, 0, 0, 0)), 2, 2);
+        var apply = _resizeApply = Ui.Primary(_l.Apply, ApplyResize);
         apply.Margin = new Thickness(8, 10, 8, 6);
         apply.HorizontalAlignment = HorizontalAlignment.Stretch;
         var stack = new StackPanel();
@@ -1035,27 +1245,38 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         return false;
     }
 
-    private void ShowMessage(string text, bool delayed)
+    /// <param name="failure">No picture to show: the badge (and info button) appear and the toolbar goes — nothing to zoom or edit.</param>
+    private void ShowMessage(Func<ImagingLabels, string> text, bool delayed, bool failure = false)
     {
-        _message.Text = text;
-        _message.Visibility = Visibility.Visible;
+        _messageText = text;
+        _message.Text = text(_l);
+        _failTile.Visibility = failure ? Visibility.Visible : Visibility.Collapsed;
+        if (_failInfo is not null) _failInfo.Visibility = failure && !_compact ? Visibility.Visible : Visibility.Collapsed;
+        _toolbarBox.Visibility = failure ? Visibility.Collapsed : Visibility.Visible;
+        _messagePanel.Visibility = Visibility.Visible;
         if (delayed && Anim.Enabled())
         {
             // only a slow open shows "Opening…" (fades in after 300 ms)
             var a = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200)) { BeginTime = TimeSpan.FromMilliseconds(300) };
-            _message.BeginAnimation(OpacityProperty, a);
+            _messagePanel.BeginAnimation(OpacityProperty, a);
         }
         else
         {
-            _message.BeginAnimation(OpacityProperty, null);
-            _message.Opacity = delayed ? 0 : 1;
+            _messagePanel.BeginAnimation(OpacityProperty, null);
+            _messagePanel.Opacity = delayed ? 0 : 1;
+            if (failure) Anim.Appear(_messagePanel, rise: 8, fromScale: 0.97, ms: 280);
         }
     }
 
+    /// <summary>The message shown instead of a picture ("could not be opened", missing codec), null while a picture shows.</summary>
+    public string? Message => _messagePanel.Visibility == Visibility.Visible && _messagePanel.Opacity > 0 ? _message.Text : null;
+
     private void HideMessage()
     {
-        _message.BeginAnimation(OpacityProperty, null);
-        _message.Visibility = Visibility.Collapsed;
+        _messageText = null;
+        _messagePanel.BeginAnimation(OpacityProperty, null);
+        _messagePanel.Visibility = Visibility.Collapsed;
+        _toolbarBox.Visibility = Visibility.Visible;
     }
 
     private System.Windows.Media.Effects.DropShadowEffect Shadow(double blur, double depth, double opacity)
@@ -1115,6 +1336,12 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         }
         var m = ContextMenu!;
         m.Items.Clear();
+        if (_options.BuildContextMenu is { } build)
+        {
+            build(m);
+            if (m.Items.Count == 0) e.Handled = true;
+            return;
+        }
         MenuItem Item(string header, string? gesture, Action click)
         {
             var i = new MenuItem { Header = header, InputGestureText = gesture ?? "" };
@@ -1127,6 +1354,7 @@ public sealed partial class ImageViewer : UserControl, IDisposable
         m.Items.Add(Item(_l.Fit, "0", () => ZoomToFit()));
         m.Items.Add(Item(_l.ActualSize, "1", ZoomToActual));
         m.Items.Add(Item(_l.Rotate, "R", () => Rotate(1)));
+        if (_compact) return;
         m.Items.Add(new Separator());
         m.Items.Add(_editing ? Item(_l.Done, "Esc", EndEdit) : Item(_l.Edit, "E", BeginEdit));
     }

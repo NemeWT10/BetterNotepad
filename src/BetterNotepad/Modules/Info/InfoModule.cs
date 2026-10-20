@@ -6,7 +6,8 @@ namespace BetterNotepad.Modules.Info;
 
 /// <summary>
 /// Files that are not text: binary files open as a read-only hex view (BetterNotepad.Hex); files nothing can show
-/// (docx, zip…, and PDF / images until their modules exist) open as an "Info" tab with size, dates, hashes and metadata.
+/// (docx, zip…) open as an "Info" tab with size, dates, hashes and metadata. PDF and images have their own modules; the image
+/// tab shows the same <see cref="InfoView"/> in its info panel (<see cref="InfoView.Embedded"/>).
 /// </summary>
 public static class InfoModule
 {

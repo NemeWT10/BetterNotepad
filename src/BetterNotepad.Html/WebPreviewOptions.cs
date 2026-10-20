@@ -11,7 +11,35 @@ public sealed class WebPreviewLabels
 
     public string RuntimeMissingHint { get; init; } = "It ships with Windows 11. Install “WebView2 Runtime” from Microsoft and reopen the tab.";
 
+    /// <summary>Button under the missing-runtime message (opens <see cref="WebPreviewOptions.RuntimeDownloadUri"/>).</summary>
+    public string RuntimeDownload { get; init; } = "Get WebView2 Runtime";
+
     public string LoadFailed { get; init; } = "The preview could not be started.";
+
+    /// <summary>Shown (faintly, in the theme's colors) for a document with no content yet.</summary>
+    public string EmptyPage { get; init; } = "Empty page";
+}
+
+/// <summary>How the WebView is hosted in WPF.</summary>
+public enum WebPreviewHosting
+{
+    /// <summary>A native child window, except in a per-pixel transparent window (there a child window is never drawn).</summary>
+    Auto,
+
+    /// <summary>A native child window (fastest; drawn above every WPF element — see <see cref="WebPreview.SetCoveredAsync"/>).</summary>
+    Window,
+
+    /// <summary>
+    /// Visual hosting (WebView2CompositionControl): an ordinary WPF element, no airspace issues, a bit more costly. Needs the
+    /// Windows SDK projection (an app targeting net*-windows10.0.17763 or later); without it Auto falls back to <see cref="Picture"/>.
+    /// </summary>
+    Composition,
+
+    /// <summary>
+    /// The page renders off-stage and WPF shows its live picture (refreshed on every change): works in a per-pixel transparent
+    /// window. Wheel scrolls, Ctrl+wheel zooms, clicks follow links, double-click goes to the source line; no text selection.
+    /// </summary>
+    Picture,
 }
 
 /// <summary>Settings shared by all previews. The first preview that starts the browser fixes the environment-level ones.</summary>
@@ -26,9 +54,21 @@ public sealed class WebPreviewOptions
 
     /// <summary>
     /// Load http(s) resources from other hosts (CDN styles, web fonts, remote images). Off by default: the preview then makes no
-    /// network connection of its own; local CSS / JS / images next to the file always work.
+    /// network connection of its own; local CSS / JS / images next to the file always work. Read per request, so a change
+    /// applies to the next load; call <see cref="WebPreview.Refresh"/> to load again at once.
     /// </summary>
     public bool AllowRemoteContent { get; set; }
+
+    /// <summary>
+    /// Tests: a remote request that <see cref="AllowRemoteContent"/> lets through is answered locally (204, empty) instead of
+    /// going to the network. <see cref="WebPreview.RemoteRequested"/> still reports it as allowed.
+    /// </summary>
+    public bool StubAllowedRemote { get; set; }
+
+    /// <summary>F12 inside the preview opens DevTools. The app turns it off when its own (rebindable) command does it.</summary>
+    public bool HandleDevToolsKey { get; set; } = true;
+
+    public WebPreviewHosting Hosting { get; set; } = WebPreviewHosting.Auto;
 
     /// <summary>Extra Chromium switches (environment-level; tests only).</summary>
     public string? AdditionalBrowserArguments { get; set; }
@@ -38,8 +78,17 @@ public sealed class WebPreviewOptions
 
     public WebPreviewLabels Labels { get; set; } = new();
 
+    /// <summary>Where the missing-runtime message sends the user (the Evergreen runtime download page).</summary>
+    public Uri RuntimeDownloadUri { get; set; } = new("https://developer.microsoft.com/microsoft-edge/webview2/");
+
     /// <summary>Opens a link in the system browser / mail program. Default: ShellExecute (http, https, mailto only).</summary>
     public Action<Uri> OpenExternal { get; set; } = DefaultOpenExternal;
+
+    /// <summary>
+    /// Optional: the current text of a local file the page loads (an unsaved editor tab), else null and the file is read from
+    /// disk. Lets a page show CSS / JS edits from other tabs before they are saved.
+    /// </summary>
+    public Func<string, string?>? ReadLocalText { get; set; }
 
     public static void DefaultOpenExternal(Uri uri)
     {
@@ -63,16 +112,24 @@ public static class WebViewRuntime
 {
     private static Task<CoreWebView2Environment>? _environment;
     private static int _views;
+    private static bool _running;
 
     /// <summary>WebViews alive right now (0 = no browser process should be running).</summary>
     public static int ActiveViews => _views;
 
+    /// <summary>A browser process of ours was started and has not reported its exit yet.</summary>
+    public static bool IsBrowserRunning => _running;
+
     /// <summary>The browser process of the shared environment exited (after the last preview released it, or crashed).</summary>
     public static event Action<CoreWebView2BrowserProcessExitKind>? BrowserProcessExited;
+
+    /// <summary>Tests: report the runtime as missing (the preview then shows its "install WebView2" message).</summary>
+    public static bool SimulateMissingRuntime { get; set; }
 
     /// <summary>Installed Evergreen runtime version, or null when WebView2 is not available.</summary>
     public static string? AvailableVersion()
     {
+        if (SimulateMissingRuntime) return null;
         try
         {
             return CoreWebView2Environment.GetAvailableBrowserVersionString();
@@ -101,7 +158,7 @@ public static class WebViewRuntime
         {
             Directory.CreateDirectory(o.UserDataFolder);
             // background networking / component updates off: the preview should not phone anywhere by itself
-            var args = "--disable-background-networking --disable-component-update --disable-sync --no-first-run";
+            var args = "--disable-background-networking --disable-component-update --disable-sync --no-first-run --disable-domain-reliability";
             if (!string.IsNullOrWhiteSpace(o.AdditionalBrowserArguments)) args += " " + o.AdditionalBrowserArguments;
             var options = new CoreWebView2EnvironmentOptions(args, o.Language)
             {
@@ -109,7 +166,12 @@ public static class WebViewRuntime
                 IsCustomCrashReportingEnabled = true, // keeps crash dumps local instead of sending them to Microsoft
             };
             var env = await CoreWebView2Environment.CreateAsync(null, o.UserDataFolder, options);
-            env.BrowserProcessExited += (_, e) => BrowserProcessExited?.Invoke(e.BrowserProcessExitKind);
+            _running = true;
+            env.BrowserProcessExited += (_, e) =>
+            {
+                _running = false;
+                BrowserProcessExited?.Invoke(e.BrowserProcessExitKind);
+            };
             return env;
         }
         catch

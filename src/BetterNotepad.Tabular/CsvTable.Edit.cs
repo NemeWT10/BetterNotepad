@@ -13,6 +13,17 @@ public static class CsvWriter
     }
 
     /// <summary>
+    /// Every line break in <paramref name="value"/> (CRLF, LF, a lone CR) written as <paramref name="lineEnding"/>, so a break typed
+    /// into a cell matches the file's own line endings.
+    /// </summary>
+    public static string NormalizeLineBreaks(string value, string lineEnding)
+    {
+        if (value.AsSpan().IndexOfAny('\r', '\n') < 0) return value;
+        var unified = value.Replace("\r\n", "\n").Replace('\r', '\n');
+        return lineEnding == "\n" ? unified : unified.Replace("\n", lineEnding);
+    }
+
+    /// <summary>
     /// Field text for <paramref name="value"/>: quoted only when needed (or when <paramref name="forceQuote"/>, or when the
     /// dialect's style quotes everything / every text field); quotes inside are doubled. Embedded line breaks are written as given.
     /// </summary>

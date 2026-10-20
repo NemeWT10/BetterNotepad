@@ -6,16 +6,22 @@ using System.Windows.Threading;
 
 namespace BetterNotepad.Imaging;
 
-/// <summary>What the viewer knows about a file (pixel size after the EXIF orientation).</summary>
-public sealed record ImageInfo(int Width, int Height, string Format, long FileSize, int Frames, int Orientation);
+/// <summary>
+/// What the viewer knows about a file (pixel size after the EXIF orientation). <see cref="HasMetadata"/>: the file carries
+/// personal metadata (EXIF, GPS, XMP, IPTC, PNG text) or an EXIF orientation — re-encoding drops it.
+/// </summary>
+public sealed record ImageInfo(int Width, int Height, string Format, long FileSize, int Frames, int Orientation, bool HasMetadata = false);
 
-public enum ImageFileFormat { Png, Jpeg, Bmp, Gif, Tiff, Webp }
+public enum ImageFileFormat { Png, Jpeg, Bmp, Gif, Tiff, Webp, Ico }
 
 /// <summary>Decoding (off the UI thread, frozen results) and encoding.</summary>
 public static class ImageCodecs
 {
     private static readonly Guid WebpContainer = new("e094b0e2-67f2-45b3-b0ea-115337ca7cf3");
     private static bool? _webp;
+
+    /// <summary>Largest side of a saved icon (the ICO directory has one byte per side; 0 = 256).</summary>
+    public const int MaxIconSide = 256;
 
     /// <summary>Formats a "save as" dialog may offer (WebP only with a WIC WebP encoder installed — Windows has none built in).</summary>
     public static IReadOnlyList<ImageFileFormat> Writable =>
@@ -45,6 +51,20 @@ public static class ImageCodecs
         ".gif" => ImageFileFormat.Gif,
         ".tif" or ".tiff" => ImageFileFormat.Tiff,
         ".webp" => ImageFileFormat.Webp,
+        ".ico" => ImageFileFormat.Ico,
+        _ => null,
+    };
+
+    /// <summary>The format of a decoded file (<see cref="ImageInfo.Format"/>), null for one we cannot write back.</summary>
+    public static ImageFileFormat? FromFormatName(string? name) => name?.ToUpperInvariant() switch
+    {
+        "PNG" => ImageFileFormat.Png,
+        "JPEG" => ImageFileFormat.Jpeg,
+        "BMP" => ImageFileFormat.Bmp,
+        "GIF" => ImageFileFormat.Gif,
+        "TIFF" => ImageFileFormat.Tiff,
+        "ICO" => ImageFileFormat.Ico,
+        "WEBP" => ImageFileFormat.Webp,
         _ => null,
     };
 
@@ -55,34 +75,107 @@ public static class ImageCodecs
         _ => "." + f.ToString().ToLowerInvariant(),
     };
 
-    /// <summary>Encodes <paramref name="image"/> (writes a temp file next to the target, then replaces it).</summary>
+    /// <summary>Extensions a file of this format may have (dialog filters), the preferred one first.</summary>
+    public static IReadOnlyList<string> Extensions(ImageFileFormat f) => f switch
+    {
+        ImageFileFormat.Jpeg => [".jpg", ".jpeg", ".jpe", ".jfif"],
+        ImageFileFormat.Tiff => [".tiff", ".tif"],
+        ImageFileFormat.Bmp => [".bmp", ".dib"],
+        _ => [Extension(f)],
+    };
+
+    /// <summary>
+    /// The decoder for a file was not found: Windows lacks the codec (WebP without the "WebP Image Extensions"). For the built-in
+    /// formats the same error means the file is not what its name says.
+    /// </summary>
+    public static bool IsMissingCodec(Exception ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+            if (e is NotSupportedException || e.HResult == unchecked((int)0x88982F50)) // WINCODEC_ERR_COMPONENTNOTFOUND
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Encodes <paramref name="image"/> (writes a temp file next to the target, then replaces it). Nothing but pixels is written:
+    /// no EXIF, GPS or XMP (the orientation is already in the pixels). Run it where the image may be used (frozen or own thread).
+    /// </summary>
     public static void Save(BitmapSource image, string path, ImageFileFormat format, int jpegQuality = 92)
     {
-        BitmapEncoder enc = format switch
-        {
-            ImageFileFormat.Png => new PngBitmapEncoder(),
-            ImageFileFormat.Jpeg => new JpegBitmapEncoder { QualityLevel = Math.Clamp(jpegQuality, 1, 100) },
-            ImageFileFormat.Bmp => new BmpBitmapEncoder(),
-            ImageFileFormat.Gif => new GifBitmapEncoder(),
-            ImageFileFormat.Tiff => new TiffBitmapEncoder { Compression = TiffCompressOption.Lzw },
-            ImageFileFormat.Webp => BitmapEncoder.Create(WebpContainer),
-            _ => new PngBitmapEncoder(),
-        };
         // JPEG / BMP have no alpha: flatten over white instead of letting the encoder turn transparency black
         var src = format is ImageFileFormat.Jpeg or ImageFileFormat.Bmp && HasAlpha(image) ? OverWhite(image) : image;
-        enc.Frames.Add(BitmapFrame.Create(src));
+        // CMYK and high bit depths: the common 8-bit formats every encoder takes
+        if (src.Format == PixelFormats.Cmyk32) src = ToFormat(src, PixelFormats.Bgr24);
+        else if (src.Format == PixelFormats.Rgba64 || src.Format == PixelFormats.Prgba64 || src.Format == PixelFormats.Rgba128Float || src.Format == PixelFormats.Prgba128Float)
+            src = ToFormat(src, PixelFormats.Bgra32);
         var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
         var tmp = Path.Combine(dir, "." + Path.GetFileName(path) + ".bn-tmp");
         try
         {
             using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
-                enc.Save(fs);
+            {
+                if (format == ImageFileFormat.Ico)
+                {
+                    WriteIcon(src, fs);
+                }
+                else
+                {
+                    BitmapEncoder enc = format switch
+                    {
+                        ImageFileFormat.Png => new PngBitmapEncoder(),
+                        ImageFileFormat.Jpeg => new JpegBitmapEncoder { QualityLevel = Math.Clamp(jpegQuality, 1, 100) },
+                        ImageFileFormat.Bmp => new BmpBitmapEncoder(),
+                        ImageFileFormat.Gif => new GifBitmapEncoder(),
+                        ImageFileFormat.Tiff => new TiffBitmapEncoder { Compression = TiffCompressOption.Lzw },
+                        ImageFileFormat.Webp => BitmapEncoder.Create(WebpContainer),
+                        _ => new PngBitmapEncoder(),
+                    };
+                    enc.Frames.Add(BitmapFrame.Create(src));
+                    enc.Save(fs);
+                }
+            }
             File.Move(tmp, path, overwrite: true);
         }
         finally
         {
             if (File.Exists(tmp)) File.Delete(tmp);
         }
+    }
+
+    private static BitmapSource ToFormat(BitmapSource b, PixelFormat f)
+    {
+        var c = new FormatConvertedBitmap(b, f, null, 0);
+        c.Freeze();
+        return c;
+    }
+
+    /// <summary>A single-image icon holding a PNG (Windows Vista and later), the picture scaled down to 256 px when larger.</summary>
+    private static void WriteIcon(BitmapSource image, Stream to)
+    {
+        var src = image;
+        var side = Math.Max(src.PixelWidth, src.PixelHeight);
+        if (side > MaxIconSide)
+        {
+            var k = (double)MaxIconSide / side;
+            src = Composer.Scale(src, Math.Max(1, (int)Math.Round(src.PixelWidth * k)), Math.Max(1, (int)Math.Round(src.PixelHeight * k)));
+        }
+        var png = new MemoryStream();
+        var enc = new PngBitmapEncoder();
+        enc.Frames.Add(BitmapFrame.Create(src));
+        enc.Save(png);
+        using var w = new BinaryWriter(to, System.Text.Encoding.ASCII, leaveOpen: true);
+        w.Write((ushort)0); // reserved
+        w.Write((ushort)1); // icon
+        w.Write((ushort)1); // one image
+        w.Write((byte)(src.PixelWidth >= 256 ? 0 : src.PixelWidth));
+        w.Write((byte)(src.PixelHeight >= 256 ? 0 : src.PixelHeight));
+        w.Write((byte)0); // no palette
+        w.Write((byte)0);
+        w.Write((ushort)1); // planes
+        w.Write((ushort)32); // bits per pixel
+        w.Write((uint)png.Length);
+        w.Write((uint)22); // the data follows the 6 + 16 byte directory
+        w.Write(png.GetBuffer(), 0, (int)png.Length);
     }
 
     private static bool HasAlpha(BitmapSource b) =>
@@ -136,6 +229,48 @@ internal static class Sta
     }
 }
 
+/// <summary>The edited picture outside a viewer: full resolution for saving and copying, a quick look at a file.</summary>
+public static class ImageExport
+{
+    /// <summary>Decodes <paramref name="source"/> at full resolution (EXIF orientation applied) and applies the edits (frozen result).</summary>
+    public static Task<BitmapSource> RenderAsync(string source, IReadOnlyList<EditOp> ops)
+    {
+        var list = ops.ToList();
+        return Sta.Run(() => Render(source, list));
+    }
+
+    /// <summary>Renders and encodes on one worker thread: pixels only, no metadata (EXIF / GPS dropped, orientation baked in).</summary>
+    public static Task SaveAsync(string source, IReadOnlyList<EditOp> ops, string path, ImageFileFormat format, int jpegQuality)
+    {
+        var list = ops.ToList();
+        return Sta.Run(() =>
+        {
+            ImageCodecs.Save(Render(source, list), path, format, jpegQuality);
+            return true;
+        });
+    }
+
+    /// <summary>Size, format, frame count and metadata presence without decoding the pixels.</summary>
+    public static Task<ImageInfo> ProbeAsync(string path) => Sta.Run(() =>
+    {
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var decoder = BitmapDecoder.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+        var first = decoder.Frames[0];
+        var o = ImageLoader.OrientationOf(first);
+        var swap = o is >= 5 and <= 8;
+        return new ImageInfo(swap ? first.PixelHeight : first.PixelWidth, swap ? first.PixelWidth : first.PixelHeight, ImageLoader.FormatOf(decoder),
+            fs.Length, decoder.Frames.Count, o, ImageLoader.HasPersonalMetadata(first, o));
+    });
+
+    private static BitmapSource Render(string source, List<EditOp> ops)
+    {
+        var d = ImageLoader.Decode(source, 0);
+        var bmp = Composer.Flatten(new Composer.State(d.Image, 1, d.Screen), ops);
+        if (!bmp.IsFrozen) bmp.Freeze();
+        return bmp;
+    }
+}
+
 /// <summary>Decoded picture data (all frozen).</summary>
 internal sealed record Decoded(ImageInfo Info, BitmapSource Image, double Scale, GifAnimation.FrameData[]? Frames, System.Windows.Size Screen);
 
@@ -159,7 +294,7 @@ internal static class ImageLoader
         var swap = orientation is >= 5 and <= 8;
         var format = FormatName(decoder);
         var frames = decoder.Frames.Count;
-        var info = new ImageInfo(swap ? rawH : rawW, swap ? rawW : rawH, format, bytes.LongLength, frames, orientation);
+        var info = new ImageInfo(swap ? rawH : rawW, swap ? rawW : rawH, format, bytes.LongLength, frames, orientation, HasPersonalMetadata(first, orientation));
 
         if (decoder is GifBitmapDecoder && frames > 1)
         {
@@ -169,6 +304,16 @@ internal static class ImageLoader
             ct.ThrowIfCancellationRequested();
             var still = GifAnimation.FirstComposite(anim, screen);
             return new Decoded(info with { Width = (int)screen.Width, Height = (int)screen.Height }, still, 1, anim, screen);
+        }
+
+        if (decoder is IconBitmapDecoder && frames > 1)
+        {
+            // an icon holds several sizes: show the largest (the first one is often 16 px)
+            ms.Position = 0;
+            var all = BitmapDecoder.Create(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            var best = all.Frames.OrderByDescending(f => (long)f.PixelWidth * f.PixelHeight).ThenByDescending(f => f.Format.BitsPerPixel).First();
+            best.Freeze();
+            return new Decoded(info with { Width = best.PixelWidth, Height = best.PixelHeight }, best, 1, null, new System.Windows.Size(best.PixelWidth, best.PixelHeight));
         }
 
         ms.Position = 0;
@@ -192,6 +337,43 @@ internal static class ImageLoader
         scale = (double)img.PixelWidth / info.Width;
         return new Decoded(info, img, scale, null, new System.Windows.Size(info.Width, info.Height));
     }
+
+    /// <summary>EXIF, GPS, XMP, IPTC or PNG text in the file, or an EXIF orientation (what saving an edited picture drops).</summary>
+    internal static bool HasPersonalMetadata(BitmapFrame frame, int orientation)
+    {
+        if (orientation > 1) return true;
+        BitmapMetadata? md;
+        try
+        {
+            md = frame.Metadata as BitmapMetadata;
+        }
+        catch
+        {
+            return false; // BMP and friends: no metadata at all
+        }
+        if (md is null) return false;
+        foreach (var q in new[]
+                 {
+                     "/app1", "/app13", "/xmp", // JPEG: EXIF (+ GPS) or XMP, IPTC
+                     "/ifd/exif", "/ifd/gps", "/ifd/xmp", "/ifd/iptc", "/ifd/{ushort=271}", "/ifd/{ushort=315}", // TIFF: camera, author
+                     "/tEXt", "/iTXt", "/zTXt", // PNG text chunks
+                 })
+        {
+            try
+            {
+                if (md.ContainsQuery(q)) return true;
+            }
+            catch
+            {
+                // the query does not apply to this format
+            }
+        }
+        return false;
+    }
+
+    internal static int OrientationOf(BitmapFrame frame) => Orientation(frame);
+
+    internal static string FormatOf(BitmapDecoder d) => FormatName(d);
 
     private static int Orientation(BitmapFrame frame)
     {

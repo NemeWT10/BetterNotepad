@@ -151,8 +151,12 @@ public sealed partial class ImageViewer
         var ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
         if (!_options.WheelZooms && !ctrl)
         {
-            var (x, y) = Clamp(_zoom, _ox, _oy + e.Delta * 0.6);
-            GlideTo(_zoom, x, y, animate: true);
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) return; // a pinned window's own gesture (Alt+wheel = window size)
+            // the wheel scrolls a zoomed-in picture (Shift: sideways), like a page
+            var sideways = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+            var (tz, tx, ty) = _target;
+            var (x, y) = sideways ? Clamp(tz, tx + e.Delta * 0.6, ty) : Clamp(tz, tx, ty + e.Delta * 0.6);
+            GlideTo(tz, x, y, animate: true);
             e.Handled = true;
             return;
         }
@@ -491,8 +495,11 @@ public sealed partial class ImageViewer
                 case Key.R:
                     Rotate(shift ? -1 : 1);
                     return true;
-                case Key.E:
+                case Key.E when !_compact:
                     BeginEdit();
+                    return true;
+                case Key.I when _options.ShowInfoButton && !_compact:
+                    InfoRequested?.Invoke();
                     return true;
             }
             return false;

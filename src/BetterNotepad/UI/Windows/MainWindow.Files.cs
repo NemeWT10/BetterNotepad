@@ -129,6 +129,7 @@ public partial class MainWindow
     public async Task<bool> SaveAsync(Document? doc = null, bool saveAs = false)
     {
         doc ??= ActiveDocument;
+        if (doc is ISaveableDocument other) return await SaveOtherAsync(doc, other, saveAs);
         if (doc is not TextDocument text) return false;
         if (!text.IsLoaded) await text.LoadAsync();
         ActiveView?.CaptureState();
@@ -180,6 +181,53 @@ public partial class MainWindow
         RecentFiles.I.Add(path);
         FileWatchService.I.Sync();
         Toasts.Show(Loc.T("save.done", text.Title), ToastKind.Success, seconds: 1.6);
+        UpdateTitle();
+        return true;
+    }
+
+    /// <summary>Save / save as of a document that is not text (an edited image): the dialog here, the writing in the document.</summary>
+    private async Task<bool> SaveOtherAsync(Document doc, ISaveableDocument saveable, bool saveAs)
+    {
+        ActiveView?.CaptureState();
+        if (doc.IsLocked && !saveAs)
+        {
+            Toasts.Show(Loc.T("save.locked"), ToastKind.Warning, Loc.T("save.unlock"), () => SetLocked(doc, false));
+            return false;
+        }
+        var path = doc.FilePath;
+        var filter = 0;
+        if (path is null || saveAs)
+        {
+            var files = SettingsService.I.Get<FilesSettings>();
+            var (name, filters, index) = saveable.SaveAsDialog();
+            var dlg = new SaveFileDialog
+            {
+                Title = Loc.T("dialog.saveTitle"),
+                FileName = name,
+                Filter = filters,
+                FilterIndex = index,
+                InitialDirectory = doc.FilePath is { } p ? Path.GetDirectoryName(p) : CurrentFolder() ?? files.LastFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                AddExtension = true,
+                OverwritePrompt = true,
+            };
+            if (dlg.ShowDialog(this) != true) return false;
+            files.LastFolder = Path.GetDirectoryName(dlg.FileName);
+            path = dlg.FileName;
+            filter = dlg.FilterIndex;
+        }
+        try
+        {
+            if (!await saveable.SaveToAsync(path, filter)) return false;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.ExternalException)
+        {
+            Log.Warn($"save {path}: {ex.Message}");
+            Toasts.Show(Loc.T("save.failed", Path.GetFileName(path), ex.Message), ToastKind.Error, Loc.T("save.saveAsElsewhere"), () => _ = SaveAsync(doc, saveAs: true));
+            return false;
+        }
+        RecentFiles.I.Add(doc.FilePath ?? path);
+        FileWatchService.I.Sync();
+        Toasts.Show(Loc.T("save.done", doc.Title), ToastKind.Success, seconds: 1.6);
         UpdateTitle();
         return true;
     }
@@ -510,6 +558,20 @@ public partial class MainWindow
             if (d.External != change) d.External = change;
             if (IsActive && Model.AllDocuments.Contains(d)) QueueExternalPrompt(d);
         }
+        // saveable non-text documents (images): nothing to lose → read the new file quietly; unsaved changes → ask
+        foreach (var d in docs.Where(x => x is ISaveableDocument && x.FilePath is not null).ToList())
+        {
+            var other = (ISaveableDocument)d;
+            if (!other.DiskDiffers(out var deleted)) continue;
+            if (!deleted && !d.IsDirty)
+            {
+                _ = other.ReloadAsync();
+                continue;
+            }
+            var change = deleted ? ExternalChange.Deleted : ExternalChange.Modified;
+            if (d.External != change) d.External = change;
+            if (IsActive && Model.AllDocuments.Contains(d)) QueueExternalPrompt(d);
+        }
     }
 
     private async Task ReloadTail(TextDocument d)
@@ -538,6 +600,11 @@ public partial class MainWindow
             while (_externalQueue.Count > 0)
             {
                 var d = _externalQueue.Dequeue();
+                if (d is ISaveableDocument other && d.External != ExternalChange.None && DocumentManager.I.Documents.Contains(d))
+                {
+                    await PromptOther(d, other);
+                    continue;
+                }
                 if (d is not TextDocument t || d.External == ExternalChange.None || !DocumentManager.I.Documents.Contains(d)) continue;
                 if (t.External == ExternalChange.Deleted) await PromptDeleted(t);
                 else await PromptModified(t);
@@ -596,6 +663,45 @@ public partial class MainWindow
         if (!t.IsLoaded) await t.LoadAsync();
         t.External = ExternalChange.None;
         t.MarkForcedDirty();
+    }
+
+    /// <summary>A changed image (or another saveable non-text document) was changed or deleted by another program.</summary>
+    private async Task PromptOther(Document d, ISaveableDocument other)
+    {
+        var loc = Workspace.I.Locate(d);
+        if (loc is { } l && l.Window == Model) l.Group.Active = d;
+        if (d.External == ExternalChange.Deleted)
+        {
+            var gone = await Dialogs.Show(Loc.T("external.deletedTitle", d.Title), Loc.T("external.deletedText"),
+            [
+                new DialogButton("keep", Loc.T("external.keepInApp"), DialogButtonKind.Primary, IsDefault: true),
+                new DialogButton("close", Loc.T("external.closeTab"), DialogButtonKind.Danger),
+            ], glyph: Glyphs.Warning);
+            if (gone == "close" && Workspace.I.Locate(d) is { } where)
+            {
+                d.External = ExternalChange.None;
+                where.Group.Remove(d);
+                if (!Workspace.I.IsOpenAnywhere(d)) DocumentManager.I.Close(d);
+                CleanupGroup(where.Group);
+                return;
+            }
+            other.KeepMine();
+            return;
+        }
+        var choice = await Dialogs.Show(Loc.T("external.modifiedTitle", d.Title), Loc.T("external.modifiedText"),
+        [
+            new DialogButton("reload", Loc.T("external.reload"), DialogButtonKind.Primary, IsDefault: true),
+            new DialogButton("keep", Loc.T("external.keep")),
+        ], glyph: Glyphs.Refresh);
+        if (choice == "reload")
+        {
+            await other.ReloadAsync();
+            Toasts.Show(Loc.T("external.reloaded", d.Title), ToastKind.Info, seconds: 1.8);
+        }
+        else
+        {
+            other.KeepMine();
+        }
     }
 
     /// <summary>Unified diff: disk version vs. the version in the app, in a new tab.</summary>
