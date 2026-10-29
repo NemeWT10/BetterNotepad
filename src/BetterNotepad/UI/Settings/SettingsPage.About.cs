@@ -19,6 +19,10 @@ public sealed partial class SettingsPage
     /// <summary>Changelog per version, newest first; each item is a localization key.</summary>
     private static readonly (string Version, string[] Items)[] WhatsNew =
     [
+        ("0.7.1",
+        [
+            "settings.about.news.071.listingFrame",
+        ]),
         ("0.7.0",
         [
             "settings.about.news.070.paste",

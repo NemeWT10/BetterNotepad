@@ -148,7 +148,8 @@ internal static class ExportSelfTest
             boxed.Copy(null);
             if (RichCopy.LastTestCopy is { } x)
             {
-                Check(x.Html.Contains("<table") && x.Html.Contains("0.5pt solid #000000"), "frame = 0.5 pt black border");
+                Check(x.Html.Contains("<table") && x.Html.Contains("border-top:solid #000000 0.75pt;mso-border-top-alt:solid #000000 0.5pt")
+                      && x.Rtf.Contains(@"\brdrw10"), "frame = black border (0.5 pt for Word, 1 px in HTML)");
                 Check(x.Html.Contains("font-family:'Courier New'"), "Courier New option");
                 Check(Regex.Matches(x.Html, "color:#([0-9A-F]{6})").Select(m => m.Groups[1].Value).Any(v => v is not ("000000" or "595959")), "listing syntax colors when enabled");
             }

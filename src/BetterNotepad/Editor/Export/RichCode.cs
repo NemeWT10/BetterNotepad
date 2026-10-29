@@ -261,7 +261,8 @@ public static class RichCodeWriter
     private static void HtmlTable(StringBuilder sb, CodeBlock block, RichCodeStyle s, bool keepLast)
     {
         var numW = NumberColumnWidth(block, s);
-        sb.Append("<table cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"border-collapse:collapse;border:none;width:100%;margin-left:0pt;margin-right:0pt\"><tbody>");
+        // no border attribute: the frame lives on the cells only, like the tables Google Docs and Word put on the clipboard
+        sb.Append("<table cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;border:none;width:100%;margin-left:0pt;margin-right:0pt\"><tbody>");
         var count = Math.Max(1, block.Lines.Count);
         for (var i = 0; i < count; i++)
         {
@@ -287,13 +288,31 @@ public static class RichCodeWriter
         sb.Append("</tbody></table>");
     }
 
+    /// <summary>Thinnest HTML border (1 px): Google Docs can drop a thinner one on paste.</summary>
+    private const double MinHtmlBorder = 0.75;
+
     private static string CellCss(RichCodeStyle s, bool first, bool last, bool left, bool right, bool gutter)
     {
-        string Side(bool on, Color? c) => on && c is { } color ? $"{Pt(s.BorderWidth)} solid {Hex(color)}" : "none";
-        var css = $"vertical-align:top;border-top:{Side(first, s.Border)};border-bottom:{Side(last, s.Border)};border-left:{Side(left, s.Border)};"
-                  + $"border-right:{(gutter ? Side(true, s.Gutter) : Side(right, s.Border))}";
-        if (s.Background is { } bg) css += ";background-color:" + Hex(bg);
-        return css;
+        var css = new StringBuilder("vertical-align:top");
+        void Side(string name, bool on, Color? c)
+        {
+            if (!on || c is not { } color)
+            {
+                css.Append(";border-").Append(name).Append(":none");
+                return;
+            }
+            // "solid <color> <width>" as Word and Google Docs write it; a thinner frame keeps its exact width for Word in mso-…-alt
+            css.Append(";border-").Append(name).Append(":solid ").Append(Hex(color)).Append(' ').Append(Pt(Math.Max(MinHtmlBorder, s.BorderWidth)));
+            if (s.BorderWidth < MinHtmlBorder)
+                css.Append(";mso-border-").Append(name).Append("-alt:solid ").Append(Hex(color)).Append(' ').Append(Pt(s.BorderWidth));
+        }
+        Side("top", first, s.Border);
+        Side("bottom", last, s.Border);
+        Side("left", left, s.Border);
+        if (gutter) Side("right", true, s.Gutter);
+        else Side("right", right, s.Border);
+        if (s.Background is { } bg) css.Append(";background-color:").Append(Hex(bg));
+        return css.ToString();
     }
 
     /// <summary>Digits × an em fraction wide enough for Consolas and Courier New, plus the cell padding.</summary>

@@ -1,7 +1,7 @@
 <Project>
   <!-- Single source of truth for the application version (SemVer). -->
   <PropertyGroup>
-    <VersionPrefix>0.7.0</VersionPrefix>
+    <VersionPrefix>0.7.1</VersionPrefix>
     <Product>BetterNotepad</Product>
     <Company>NemeWT10</Company>
     <Authors>NemeWT10</Authors>

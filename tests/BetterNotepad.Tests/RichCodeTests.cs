@@ -535,27 +535,50 @@ public sealed class RichCodeTests
     {
         var html = RichCodeWriter.Html(Code("a", "b"), new RichCodeStyle { Background = Color.FromRgb(0xF5, 0xF5, 0xF5), Border = Color.FromRgb(0xCC, 0xCC, 0xCC), BorderWidth = 0.5 });
         Assert.Contains("background-color:#F5F5F5", html);
-        Assert.Contains("border-top:0.5pt solid #CCCCCC", html);
-        Assert.Contains("border-bottom:0.5pt solid #CCCCCC", html);
-        Assert.Contains("border-left:0.5pt solid #CCCCCC", html);
-        Assert.Contains("border-right:0.5pt solid #CCCCCC", html);
+        foreach (var side in new[] { "top", "bottom", "left", "right" })
+        {
+            Assert.Contains($"border-{side}:solid #CCCCCC 0.75pt", html);
+            Assert.Contains($"mso-border-{side}-alt:solid #CCCCCC 0.5pt", html);
+        }
+    }
+
+    [Fact]
+    public void Html_ThinBorder_IsOnePixelForDocsAndExactForWord()
+    {
+        var thin = RichCodeWriter.Html(Code("a"), new RichCodeStyle { Border = Colors.Black, BorderWidth = 0.5 });
+        Assert.DoesNotContain("0.5pt solid", thin);
+        Assert.Contains("border-top:solid #000000 0.75pt;mso-border-top-alt:solid #000000 0.5pt", thin);
+
+        var thick = RichCodeWriter.Html(Code("a"), new RichCodeStyle { Border = Colors.Black, BorderWidth = 1 });
+        Assert.Contains("border-top:solid #000000 1pt", thick);
+        Assert.DoesNotContain("mso-border", thick);
+    }
+
+    [Fact]
+    public void Html_Table_HasNoBorderAttribute()
+    {
+        var html = RichCodeWriter.Html(Code("a"), new RichCodeStyle { Border = Colors.Black });
+        var table = ParseHtml(html).Descendants("table").Single();
+        Assert.Null(table.Attribute("border"));
     }
 
     [Fact]
     public void Html_BorderOutlinesTheBlockNotEveryRow()
     {
         var rows = ParseHtml(RichCodeWriter.Html(Code("a", "b", "c"), new RichCodeStyle { Border = Colors.Gray })).Descendants("td").Select(td => (string)td.Attribute("style")!).ToList();
-        Assert.Contains("border-top:0.5pt solid", rows[0]);
+        Assert.Contains("border-top:solid", rows[0]);
+        Assert.Contains("border-left:solid", rows[1]);
+        Assert.Contains("border-right:solid", rows[1]);
         Assert.Contains("border-top:none", rows[1]);
         Assert.Contains("border-bottom:none", rows[1]);
-        Assert.Contains("border-bottom:0.5pt solid", rows[2]);
+        Assert.Contains("border-bottom:solid", rows[2]);
     }
 
     [Fact]
     public void Html_Gutter_SeparatesNumbersFromCode()
     {
         var html = RichCodeWriter.Html(Code("a"), new RichCodeStyle { LineNumbers = true, Gutter = Color.FromRgb(0xAA, 0xBB, 0xCC) });
-        Assert.Contains("border-right:0.5pt solid #AABBCC", html);
+        Assert.Contains("border-right:solid #AABBCC 0.75pt", html);
     }
 
     [Fact]
